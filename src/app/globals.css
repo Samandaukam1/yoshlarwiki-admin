@@ -1,26 +1,325 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   YoshlarWiki dizayn tizimi
+   Ranglar dizayn PDF'laridan piksel darajasida olingan.
+   ========================================================================== */
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* Yuzalar */
+  --yw-bg: #fbfbfc;
+  --yw-bg-subtle: #f5f7fa;
+  --yw-surface: #ffffff;
+  --yw-surface-2: #f7f8fb;
+  --yw-surface-hover: #f4f6fa;
+
+  /* Chegaralar */
+  --yw-line: #e9ebf0;
+  --yw-line-strong: #dcdfe7;
+
+  /* Matn */
+  --yw-text: #0a1020;
+  --yw-text-2: #55607a;
+  --yw-text-3: #8a93a5;
+
+  /* Brend */
+  --yw-accent: #0050fa;
+  --yw-accent-hover: #0043e0;
+  --yw-accent-fg: #ffffff;
+  --yw-accent-text: #0050fa;
+  --yw-accent-soft: #e9effd;
+  --yw-accent-soft-fg: #0050fa;
+  --yw-accent-ring: rgb(0 80 250 / 0.35);
+
+  /* Holat ranglari */
+  --yw-success: #0f9d58;
+  --yw-success-soft: #e6f6ed;
+  --yw-warning: #b45309;
+  --yw-warning-soft: #fdf3e3;
+  --yw-danger: #d92d20;
+  --yw-danger-soft: #fdecea;
+
+  /* Soyalar */
+  --yw-shadow-sm: 0 1px 2px rgb(16 24 40 / 0.04);
+  --yw-shadow-md: 0 1px 2px rgb(16 24 40 / 0.04), 0 8px 24px rgb(16 24 40 / 0.06);
+  --yw-shadow-lg: 0 2px 4px rgb(16 24 40 / 0.04), 0 18px 44px rgb(16 24 40 / 0.09);
+
+  /* Hero fon effektlari */
+  --yw-hero-glow: radial-gradient(60% 55% at 50% 42%, rgb(0 80 250 / 0.05), transparent 70%);
+  --yw-hero-grid: rgb(10 16 32 / 0.045);
+  --yw-ghost-card: #f1f3f7;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --yw-bg: #000c1a;
+  --yw-bg-subtle: #020e1f;
+  --yw-surface: #04101f;
+  --yw-surface-2: #071628;
+  --yw-surface-hover: #0a1a2e;
+
+  --yw-line: #142440;
+  --yw-line-strong: #1d3050;
+
+  --yw-text: #ffffff;
+  --yw-text-2: #9aa8bd;
+  --yw-text-3: #6b7a91;
+
+  --yw-accent: #0f5df7;
+  --yw-accent-hover: #2b74ff;
+  --yw-accent-fg: #ffffff;
+  --yw-accent-text: #3d82ff;
+  --yw-accent-soft: #0c2044;
+  --yw-accent-soft-fg: #5b9bff;
+  --yw-accent-ring: rgb(61 130 255 / 0.45);
+
+  --yw-success: #34d399;
+  --yw-success-soft: #06251c;
+  --yw-warning: #fbbf24;
+  --yw-warning-soft: #2a1d05;
+  --yw-danger: #f87171;
+  --yw-danger-soft: #2b0f10;
+
+  --yw-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --yw-shadow-md: 0 2px 8px rgb(0 0 0 / 0.45);
+  --yw-shadow-lg: 0 8px 40px rgb(0 0 0 / 0.55);
+
+  --yw-hero-glow: radial-gradient(58% 52% at 50% 40%, rgb(15 93 247 / 0.16), transparent 72%);
+  --yw-hero-grid: rgb(255 255 255 / 0.045);
+  --yw-ghost-card: #081527;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--yw-bg);
+  --color-bg-subtle: var(--yw-bg-subtle);
+  --color-surface: var(--yw-surface);
+  --color-surface-2: var(--yw-surface-2);
+  --color-surface-hover: var(--yw-surface-hover);
+
+  --color-line: var(--yw-line);
+  --color-line-strong: var(--yw-line-strong);
+
+  --color-ink: var(--yw-text);
+  --color-ink-2: var(--yw-text-2);
+  --color-ink-3: var(--yw-text-3);
+
+  --color-accent: var(--yw-accent);
+  --color-accent-hover: var(--yw-accent-hover);
+  --color-accent-fg: var(--yw-accent-fg);
+  --color-accent-text: var(--yw-accent-text);
+  --color-accent-soft: var(--yw-accent-soft);
+  --color-accent-soft-fg: var(--yw-accent-soft-fg);
+
+  --color-success: var(--yw-success);
+  --color-success-soft: var(--yw-success-soft);
+  --color-warning: var(--yw-warning);
+  --color-warning-soft: var(--yw-warning-soft);
+  --color-danger: var(--yw-danger);
+  --color-danger-soft: var(--yw-danger-soft);
+
+  --color-ghost-card: var(--yw-ghost-card);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-card: 16px;
+  --radius-panel: 20px;
+  --radius-control: 10px;
+  --radius-chip: 12px;
+  --radius-photo: 14px;
+
+  --shadow-yw-sm: var(--yw-shadow-sm);
+  --shadow-yw: var(--yw-shadow-md);
+  --shadow-yw-lg: var(--yw-shadow-lg);
+
+  --container-page: 1280px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ==========================================================================
+   Asos
+   ========================================================================== */
+
+* {
+  border-color: var(--yw-line);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--yw-bg);
+  color: var(--yw-text);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--yw-accent);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--yw-accent-text);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Tarkib kengligi — dizayndagi 1280px konteyner */
+.yw-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
+@media (min-width: 768px) {
+  .yw-container {
+    padding-inline: 32px;
+  }
+}
+
+/* ==========================================================================
+   Komponent uslublari
+   ========================================================================== */
+
+/* "Yoshlar tomonidan." ostidagi qo'lda chizilgan ko'k chiziq */
+.yw-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.yw-underline::after {
+  content: "";
+  position: absolute;
+  left: 1%;
+  right: 1%;
+  bottom: -0.16em;
+  height: 0.13em;
+  background: var(--yw-accent-text);
+  border-radius: 999px;
+  -webkit-mask-image: radial-gradient(60% 140% at 50% 0%, #000 62%, transparent 63%);
+  mask-image: radial-gradient(60% 140% at 50% 0%, #000 62%, transparent 63%);
+}
+
+/* Hero orqa fon: yumshoq nur + ingichka vertikal to'r */
+.yw-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--yw-hero-glow);
+}
+
+.yw-hero-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--yw-hero-grid) 0 1px,
+    transparent 1px 160px
+  );
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 72%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 72%, transparent);
+}
+
+/* Ariza sahifasidagi burchak nurlanishi */
+.yw-apply-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.yw-apply-bg::before {
+  content: "";
+  position: absolute;
+  left: -10%;
+  bottom: -30%;
+  width: 70%;
+  height: 90%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(0 80 250 / 0.06), transparent 62%);
+}
+
+[data-theme="dark"] .yw-apply-bg::before {
+  background: radial-gradient(circle, rgb(15 93 247 / 0.28), transparent 60%);
+}
+
+.yw-apply-bg::after {
+  content: "";
+  position: absolute;
+  right: -20%;
+  top: 10%;
+  width: 60%;
+  height: 110%;
+  border-radius: 50%;
+  border: 1px solid var(--yw-line);
+  opacity: 0.6;
+}
+
+/* Skeleton animatsiyasi */
+@keyframes yw-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.yw-skeleton {
+  background: var(--yw-surface-2);
+  animation: yw-pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Gorizontal skroll (mobil loyihalar ro'yxati) */
+.yw-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
+}
+
+.yw-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+/* Profil sahifasidagi katta "01" raqami */
+.yw-watermark {
+  font-size: clamp(140px, 20vw, 300px);
+  font-weight: 800;
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  color: var(--yw-text);
+  opacity: 0.05;
+  user-select: none;
+}
+
+[data-theme="dark"] .yw-watermark {
+  opacity: 0.06;
 }
