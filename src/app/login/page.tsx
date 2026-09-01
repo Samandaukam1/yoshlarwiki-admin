@@ -21,7 +21,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
     <main className="flex min-h-dvh items-center justify-center px-5 py-10">
       <div className="w-full max-w-[420px]">
         <div className="flex justify-center">
-          <Logo />
+          <Logo size="lg" priority />
         </div>
 
         <div className="mt-8 rounded-panel border border-line bg-surface p-7 shadow-yw sm:p-8">

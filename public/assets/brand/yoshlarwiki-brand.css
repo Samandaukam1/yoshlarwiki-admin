@@ -1,0 +1,12 @@
+:root{
+  --yw-logo-horizontal:url("/assets/brand/svg/logo-horizontal-light.svg");
+  --yw-logo-mark:url("/assets/brand/png/logo-mark-light.png");
+  --yw-short-logo:url("/assets/brand/svg/short-logo-light.svg");
+}
+html.dark,[data-theme="dark"]{
+  --yw-logo-horizontal:url("/assets/brand/svg/logo-horizontal-dark.svg");
+  --yw-logo-mark:url("/assets/brand/png/logo-mark-dark.png");
+  --yw-short-logo:url("/assets/brand/svg/short-logo-dark.svg");
+}
+.yw-logo-horizontal{display:block;width:auto;height:40px;content:var(--yw-logo-horizontal)}
+.yw-brand-mark{display:block;width:36px;height:36px;object-fit:contain}

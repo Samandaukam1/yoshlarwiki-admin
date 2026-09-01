@@ -18,6 +18,19 @@ export const metadata: Metadata = {
   },
   description: "YoshlarWiki boshqaruv paneli.",
   robots: { index: false, follow: false },
+  icons: {
+    icon: [
+      { url: "/assets/brand/favicons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/assets/brand/favicons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/assets/brand/favicons/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/assets/brand/favicons/favicon-64x64.png", sizes: "64x64", type: "image/png" },
+      { url: "/assets/brand/favicons/favicon-128x128.png", sizes: "128x128", type: "image/png" },
+      { url: "/assets/brand/favicons/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/assets/brand/favicons/favicon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/assets/brand/favicons/favicon-32x32.png",
+    apple: "/assets/brand/favicons/favicon-180x180.png",
+  },
 };
 
 export const viewport: Viewport = {

@@ -1,0 +1,18 @@
+{
+  "brand": "YoshlarWiki.uz",
+  "theme": {
+    "light": {
+      "logo": "/assets/brand/svg/logo-horizontal-light.svg",
+      "mark": "/assets/brand/png/logo-mark-light.png"
+    },
+    "dark": {
+      "logo": "/assets/brand/svg/logo-horizontal-dark.svg",
+      "mark": "/assets/brand/png/logo-mark-dark.png"
+    }
+  },
+  "favicon": "/assets/brand/favicons/favicon-32x32.png",
+  "appIcon": {
+    "light": "/assets/brand/png/app-icon-light-1024.png",
+    "dark": "/assets/brand/png/app-icon-dark-1024.png"
+  }
+}

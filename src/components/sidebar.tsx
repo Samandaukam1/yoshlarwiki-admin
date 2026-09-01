@@ -143,13 +143,13 @@ export function Sidebar({
         >
           <Menu className="size-5" strokeWidth={1.9} />
         </button>
-        <Logo />
+        <Logo priority />
       </div>
 
       {/* Desktop yon panel */}
       <aside className="fixed inset-y-0 left-0 hidden w-[264px] flex-col border-r border-line bg-surface lg:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-line px-5">
-          <Logo />
+          <Logo priority />
         </div>
         {nav}
         {footer}
