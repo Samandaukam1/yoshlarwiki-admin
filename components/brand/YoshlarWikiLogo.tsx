@@ -16,16 +16,16 @@ const VARIANTS: Record<
   { light: string; dark: string; width: number; height: number; sizes?: string }
 > = {
   horizontal: {
-    light: `${BASE}/svg/logo-horizontal-light.svg`,
-    dark: `${BASE}/svg/logo-horizontal-dark.svg`,
-    width: 1800,
-    height: 420,
+    light: `${BASE}/png/logo-horizontal-light.png`,
+    dark: `${BASE}/png/logo-horizontal-dark.png`,
+    width: 1080,
+    height: 300,
   },
   short: {
-    light: `${BASE}/svg/short-logo-light.svg`,
-    dark: `${BASE}/svg/short-logo-dark.svg`,
-    width: 512,
-    height: 512,
+    light: `${BASE}/png/short-logo-light.png`,
+    dark: `${BASE}/png/short-logo-dark.png`,
+    width: 1080,
+    height: 1080,
   },
   mark: {
     light: `${BASE}/png/logo-mark-light.png`,

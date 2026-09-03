@@ -3,8 +3,9 @@ import Link from "next/link";
 import { YoshlarWikiLogo } from "../../components/brand/YoshlarWikiLogo";
 
 /**
- * Admin panel logotipi — YoshlarWiki gorizontal logotipi + "admin" belgisi.
- * Sidebar/mobil sarlavha uchun `size="md"`, login sahifasi uchun `size="lg"`.
+ * Admin panel logotipi. Sidebar/mobil sarlavhaning tepasida (`size="md"`)
+ * ixcham kvadrat "short" belgi ko'rsatiladi — tor panelga yaxshi sig'adi;
+ * login sahifasida (`size="lg"`) esa to'liq gorizontal logotip.
  */
 export function Logo({
   href = "/",
@@ -15,7 +16,8 @@ export function Logo({
   size?: "md" | "lg";
   priority?: boolean;
 }) {
-  const height = size === "lg" ? "h-10" : "h-8";
+  const isLg = size === "lg";
+  const height = isLg ? "h-10" : "h-8";
 
   return (
     <Link
@@ -24,7 +26,7 @@ export function Logo({
       className="inline-flex shrink-0 items-center gap-2"
     >
       <YoshlarWikiLogo
-        variant="horizontal"
+        variant={isLg ? "horizontal" : "short"}
         alt=""
         priority={priority}
         className={`${height} w-auto`}
