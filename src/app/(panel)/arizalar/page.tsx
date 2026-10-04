@@ -7,6 +7,8 @@ import {
   Badge,
   EmptyState,
   formatDateTime,
+  MobileItem,
+  MobileList,
   PageHeader,
   TableWrap,
   Td,
@@ -132,7 +134,39 @@ export default async function ApplicationsPage(
         </div>
       ) : (
         <>
-          <div className="mt-6">
+          {/* Telefonda — kartochkalar, kengroq ekranda — jadval. */}
+          <div className="mt-6 md:hidden">
+            <MobileList>
+              {rows.map((item) => (
+                <MobileItem key={item.id} className="p-0">
+                  <Link href={`/arizalar/${item.id}`} className="block p-4">
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block truncate text-[14.5px] font-semibold text-ink">{item.full_name}</span>
+                        <span className="mt-0.5 block text-[12.5px] tabular-nums text-ink-2">{item.phone}</span>
+                      </span>
+                      <Badge tone={STATUS_TONES[item.status] ?? "neutral"}>
+                        {STATUS_LABELS[item.status] ?? item.status}
+                      </Badge>
+                    </span>
+                    <span className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-3">
+                      <span className="max-w-full truncate">{item.telegram}</span>
+                      <span>
+                        {AGE_RANGE_LABELS[item.age_range] ?? item.age_range} ·{" "}
+                        {GENDER_LABELS[item.gender] ?? item.gender}
+                      </span>
+                      {item.promo_code ? (
+                        <span className="font-mono tracking-wide text-ink-2">{item.promo_code}</span>
+                      ) : null}
+                      <span className="tabular-nums">{formatDateTime(item.created_at)}</span>
+                    </span>
+                  </Link>
+                </MobileItem>
+              ))}
+            </MobileList>
+          </div>
+
+          <div className="mt-6 hidden md:block">
             <TableWrap>
               <thead>
                 <tr>

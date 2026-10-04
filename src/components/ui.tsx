@@ -65,13 +65,13 @@ export function PageHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div className="min-w-0">
-        <h1 className="text-[24px] font-bold tracking-[-0.02em] text-ink lg:text-[28px]">
+        <h1 className="text-[21px] font-bold leading-tight tracking-[-0.02em] text-ink [overflow-wrap:anywhere] sm:text-[24px] lg:text-[28px]">
           {title}
         </h1>
         {description ? (
-          <p className="mt-1.5 text-[14px] text-ink-2">{description}</p>
+          <p className="mt-1 text-[13px] text-ink-2 sm:mt-1.5 sm:text-[14px]">{description}</p>
         ) : null}
       </div>
       {children ? (
@@ -139,16 +139,22 @@ export function StatCard({
   hint?: string;
   href?: string;
 }) {
+  // Telefonda ikki ustunli ixcham karta, kengroq ekranda — kattaroq.
   const body = (
     <>
-      <span className="grid size-10 place-items-center rounded-xl bg-accent-soft text-accent-soft-fg">
-        <Icon className="size-[19px]" strokeWidth={1.8} />
+      <span className="flex items-start justify-between gap-2">
+        <span className="grid size-9 place-items-center rounded-xl bg-accent-soft text-accent-soft-fg sm:size-10">
+          <Icon className="size-[18px] sm:size-[19px]" strokeWidth={1.8} />
+        </span>
+        {href ? (
+          <ArrowRight className="mt-1 size-4 text-ink-3 transition-transform group-hover:translate-x-0.5 group-hover:text-accent-text sm:hidden" />
+        ) : null}
       </span>
-      <p className="mt-4 text-[26px] font-bold leading-none tracking-[-0.02em] text-ink tabular-nums">
+      <p className="mt-3 text-[22px] font-bold leading-none tracking-[-0.02em] text-ink tabular-nums sm:mt-4 sm:text-[26px]">
         {value}
       </p>
-      <p className="mt-1.5 text-[13px] text-ink-2">{label}</p>
-      {hint ? <p className="mt-0.5 text-[12px] text-ink-3">{hint}</p> : null}
+      <p className="mt-1.5 text-[12.5px] leading-snug text-ink-2 sm:text-[13px]">{label}</p>
+      {hint ? <p className="mt-0.5 text-[11.5px] text-ink-3 sm:text-[12px]">{hint}</p> : null}
     </>
   );
 
@@ -156,10 +162,10 @@ export function StatCard({
     return (
       <Link
         href={href}
-        className="group rounded-card border border-line bg-surface p-5 transition-all hover:border-line-strong hover:shadow-yw"
+        className="group rounded-card border border-line bg-surface p-4 transition-all hover:border-line-strong hover:shadow-yw active:scale-[0.98] sm:p-5"
       >
         {body}
-        <span className="mt-3 flex items-center gap-1 text-[12px] font-medium text-accent-text">
+        <span className="mt-3 hidden items-center gap-1 text-[12px] font-medium text-accent-text sm:flex">
           Batafsil
           <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </span>
@@ -168,7 +174,7 @@ export function StatCard({
   }
 
   return (
-    <div className="rounded-card border border-line bg-surface p-5">{body}</div>
+    <div className="rounded-card border border-line bg-surface p-4 sm:p-5">{body}</div>
   );
 }
 
@@ -275,6 +281,24 @@ export function Field({
 /* ------------------------------------------------------------------ */
 /* Jadval                                                             */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Telefonda jadval o'rniga kartochkalar ro'yxati (md dan kichik ekranlar).
+ * Odatda jadval `DesktopOnly` ichiga o'raladi va yonida `MobileList` turadi.
+ */
+export function MobileList({ children }: { children: React.ReactNode }) {
+  return <ul className="space-y-2.5 md:hidden">{children}</ul>;
+}
+
+export function MobileItem({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <li className={`rounded-card border border-line bg-surface p-4 ${className}`}>{children}</li>
+  );
+}
+
+export function DesktopOnly({ children }: { children: React.ReactNode }) {
+  return <div className="hidden md:block">{children}</div>;
+}
 
 export function TableWrap({ children }: { children: React.ReactNode }) {
   return (

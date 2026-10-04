@@ -154,7 +154,7 @@ export default async function CertificatesPage(props: PageProps<"/sertifikatlar"
                 Berilgan sertifikatlar <span className="font-medium text-ink-3">({total})</span>
               </h2>
               <form action="/sertifikatlar" className="flex flex-col gap-2 sm:flex-row">
-                <div className="relative">
+                <div className="relative min-w-0">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
                   <input
                     type="search"
@@ -197,6 +197,39 @@ export default async function CertificatesPage(props: PageProps<"/sertifikatlar"
                 />
               </div>
             ) : (
+              <>
+              {/* Telefonda — kartochkalar, kengroq ekranda — jadval. */}
+              <ul className="divide-y divide-line border-t border-line md:hidden">
+                {rows.map((row) => (
+                  <li key={row.id} className="px-4 py-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-[14.5px] font-semibold text-ink">{row.recipient_name}</p>
+                        <p className="mt-0.5 font-mono text-[12px] font-semibold text-ink-2">{row.code}</p>
+                      </div>
+                      <Badge tone={row.is_revoked ? "danger" : "success"}>
+                        {row.is_revoked ? "Bekor qilingan" : "Faol"}
+                      </Badge>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2 text-[12px] text-ink-3">
+                        <Badge tone={row.type === "mualliflik" ? "info" : "neutral"}>
+                          {CERTIFICATE_SHORT[row.type]}
+                        </Badge>
+                        <span className="tabular-nums">{formatIsoDate(row.issued_on)}</span>
+                      </span>
+                      <CertificateRowActions
+                        id={row.id}
+                        code={row.code}
+                        revoked={row.is_revoked}
+                        siteUrl={siteUrl}
+                        writable={writable}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden md:block">
               <TableWrap>
                 <thead>
                   <tr>
@@ -249,6 +282,8 @@ export default async function CertificatesPage(props: PageProps<"/sertifikatlar"
                   ))}
                 </tbody>
               </TableWrap>
+              </div>
+              </>
             )}
 
             {pages > 1 ? (

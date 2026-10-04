@@ -84,7 +84,7 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`Salom, ${(admin.full_name || admin.email).split(" ")[0]}`}
+        title={`Salom, ${admin.full_name?.trim().split(/\s+/)[0] || admin.email.split("@")[0]}`}
         description="YoshlarWiki platformasining joriy holati."
       >
         <ButtonLink href="/nomzodlar">
@@ -93,7 +93,7 @@ export default async function DashboardPage() {
         </ButtonLink>
       </PageHeader>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 lg:grid-cols-4">
         <StatCard
           icon={Inbox}
           label="Yangi arizalar"
@@ -124,8 +124,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* Statuslar bo'yicha taqsimot */}
-      <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_320px]">
-        <Card padded={false}>
+      {/* minmax(0,1fr): ichidagi keng jadval ustunni (va sahifani) ekrandan
+          kengaytirib yubormasin — aks holda Android butun sahifani kichraytiradi. */}
+      <div className="mt-5 grid grid-cols-1 gap-4 sm:mt-8 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <Card padded={false} className="min-w-0">
           <div className="p-5">
             <CardTitle
               action={
@@ -150,7 +152,31 @@ export default async function DashboardPage() {
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <ul className="divide-y divide-line border-t border-line md:hidden">
+              {stats.recent_applications.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    href={`/arizalar/${item.id}`}
+                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-hover"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-semibold text-ink">{item.full_name}</span>
+                      <span className="mt-0.5 block truncate text-[12.5px] text-ink-3">
+                        <span className="tabular-nums">{item.phone}</span> ·{" "}
+                        {AGE_RANGE_LABELS[item.age_range] ?? item.age_range} ·{" "}
+                        {GENDER_LABELS[item.gender] ?? item.gender}
+                      </span>
+                      <span className="mt-0.5 block text-[12px] text-ink-3">{formatDateTime(item.created_at)}</span>
+                    </span>
+                    <Badge tone={STATUS_TONES[item.status] ?? "neutral"}>
+                      {STATUS_LABELS[item.status] ?? item.status}
+                    </Badge>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[640px] border-collapse text-left">
                 <thead>
                   <tr>
@@ -165,7 +191,9 @@ export default async function DashboardPage() {
                   {stats.recent_applications.map((item) => (
                     <tr key={item.id} className="hover:bg-surface-hover">
                       <Td className="font-semibold text-ink">
-                        {item.full_name}
+                        <Link href={`/arizalar/${item.id}`} className="hover:text-accent-text">
+                          {item.full_name}
+                        </Link>
                       </Td>
                       <Td className="tabular-nums">{item.phone}</Td>
                       <Td>
@@ -185,6 +213,7 @@ export default async function DashboardPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </Card>
 
@@ -222,22 +251,22 @@ export default async function DashboardPage() {
       </div>
 
       {/* Nomzodlar holati */}
-      <div className="mt-5 grid gap-4 sm:grid-cols-3">
-        <Card>
-          <p className="text-[13px] text-ink-2">Nashr etilgan</p>
-          <p className="mt-1 text-[24px] font-bold tabular-nums text-ink">
+      <div className="mt-4 grid grid-cols-3 gap-3 sm:mt-5 sm:gap-4">
+        <Card padded={false} className="p-3.5 sm:p-5">
+          <p className="text-[12px] leading-snug text-ink-2 sm:text-[13px]">Nashr etilgan</p>
+          <p className="mt-1 text-[20px] font-bold tabular-nums text-ink sm:text-[24px]">
             {stats.candidates_published}
           </p>
         </Card>
-        <Card>
-          <p className="text-[13px] text-ink-2">Qoralama</p>
-          <p className="mt-1 text-[24px] font-bold tabular-nums text-ink">
+        <Card padded={false} className="p-3.5 sm:p-5">
+          <p className="text-[12px] leading-snug text-ink-2 sm:text-[13px]">Qoralama</p>
+          <p className="mt-1 text-[20px] font-bold tabular-nums text-ink sm:text-[24px]">
             {stats.candidates_draft}
           </p>
         </Card>
-        <Card>
-          <p className="text-[13px] text-ink-2">Arxivlangan</p>
-          <p className="mt-1 text-[24px] font-bold tabular-nums text-ink">
+        <Card padded={false} className="p-3.5 sm:p-5">
+          <p className="text-[12px] leading-snug text-ink-2 sm:text-[13px]">Arxivlangan</p>
+          <p className="mt-1 text-[20px] font-bold tabular-nums text-ink sm:text-[24px]">
             {stats.candidates_archived}
           </p>
         </Card>

@@ -23,8 +23,9 @@ export default async function PanelLayout({ children }: LayoutProps<"/">) {
         newApplications={count ?? 0}
       />
 
-      <main className="px-4 py-6 lg:ml-[264px] lg:px-8 lg:py-10">
-        <div className="mx-auto max-w-[1180px]">{children}</div>
+      {/* Telefonda pastda tab-panel bor — kontent uning ostida qolmasin. */}
+      <main className="min-w-0 px-4 pb-28 pt-5 lg:ml-[264px] lg:px-8 lg:py-10">
+        <div className="mx-auto min-w-0 max-w-[1180px]">{children}</div>
       </main>
     </div>
   );

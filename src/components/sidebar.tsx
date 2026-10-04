@@ -37,6 +37,14 @@ const NAV = [
   { href: "/sozlamalar", label: "Sozlamalar", icon: Settings },
 ];
 
+/** Pastki tab-panel (telefon) — eng ko'p ishlatiladigan bo'limlar. */
+const TABS = [
+  { href: "/", label: "Bosh sahifa", icon: LayoutDashboard, exact: true },
+  { href: "/arizalar", label: "Arizalar", icon: Inbox },
+  { href: "/nomzodlar", label: "Nomzodlar", icon: Users },
+  { href: "/sertifikatlar", label: "Sertifikat", icon: Award },
+];
+
 function isActive(pathname: string, href: string, exact?: boolean) {
   if (exact) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -141,18 +149,66 @@ export function Sidebar({
           etadi: iOS Safari / Telegram brauzerida sahifa yuqori panel ostiga
           ham chiziladi va aks holda sarlavha tepasida scroll qilinayotgan
           kontent ko'rinib qolardi. */}
-      <div className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-line bg-bg px-4 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-bg before:content-[''] lg:hidden">
+      <div className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-line bg-bg px-4 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-bg before:content-[''] lg:hidden">
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Menyuni ochish"
           aria-expanded={open}
-          className="grid size-10 place-items-center rounded-[10px] border border-line text-ink"
+          className="grid size-9 place-items-center rounded-[10px] border border-line text-ink"
         >
           <Menu className="size-5" strokeWidth={1.9} />
         </button>
         <Logo priority />
+        <ThemeToggle className="ml-auto" />
       </div>
+
+      {/* Telefon uchun pastki tab-panel — asosiy bo'limlar bir bosishda. */}
+      <nav
+        aria-label="Tezkor menyu"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      >
+        <ul className="mx-auto grid max-w-[560px] grid-cols-5">
+          {TABS.map((tab) => {
+            const active = isActive(pathname, tab.href, tab.exact);
+            return (
+              <li key={tab.href}>
+                <Link
+                  href={tab.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`relative flex h-[60px] flex-col items-center justify-center gap-1 text-[10.5px] font-medium transition-colors ${
+                    active ? "text-accent-text" : "text-ink-3 hover:text-ink"
+                  }`}
+                >
+                  {active ? (
+                    <span aria-hidden className="absolute inset-x-4 top-0 h-[2.5px] rounded-b-full bg-accent-text" />
+                  ) : null}
+                  <span className="relative">
+                    <tab.icon className="size-[21px]" strokeWidth={active ? 2.1 : 1.8} />
+                    {tab.href === "/arizalar" && newApplications > 0 ? (
+                      <span className="absolute -right-2.5 -top-1.5 grid min-w-[18px] place-items-center rounded-full bg-accent px-1 text-[10px] font-bold leading-[18px] text-accent-fg ring-2 ring-surface">
+                        {newApplications > 99 ? "99+" : newApplications}
+                      </span>
+                    ) : null}
+                  </span>
+                  {tab.label}
+                </Link>
+              </li>
+            );
+          })}
+          <li>
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              aria-expanded={open}
+              className="flex h-[60px] w-full flex-col items-center justify-center gap-1 text-[10.5px] font-medium text-ink-3 hover:text-ink"
+            >
+              <Menu className="size-[21px]" strokeWidth={1.8} />
+              Menyu
+            </button>
+          </li>
+        </ul>
+      </nav>
 
       {/* Desktop yon panel */}
       <aside className="fixed inset-y-0 left-0 hidden w-[264px] flex-col border-r border-line bg-surface lg:flex">

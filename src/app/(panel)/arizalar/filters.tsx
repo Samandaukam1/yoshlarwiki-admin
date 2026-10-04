@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Loader2, Search, X } from "lucide-react";
+import { ChevronDown, Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { inputClass } from "@/components/ui";
@@ -22,6 +22,10 @@ export function ApplicationFilters({ promoCodes }: { promoCodes: string[] }) {
   const [term, setTerm] = useState(urlQuery);
   const [lastUrlQuery, setLastUrlQuery] = useState(urlQuery);
   const first = useRef(true);
+  // Telefonda filtrlar yig'ilgan holda turadi (faol filtr bo'lsa — ochiq).
+  const [expanded, setExpanded] = useState(
+    () => ["status", "jins", "yosh", "promo", "sana"].some((key) => params.get(key)),
+  );
 
   if (urlQuery !== lastUrlQuery) {
     setLastUrlQuery(urlQuery);
@@ -86,7 +90,23 @@ export function ApplicationFilters({ promoCodes }: { promoCodes: string[] }) {
         ) : null}
       </div>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        aria-expanded={expanded}
+        className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-line text-[13px] font-semibold text-ink-2 transition-colors hover:bg-surface-hover sm:hidden"
+      >
+        <SlidersHorizontal className="size-4" strokeWidth={1.9} />
+        Filtrlar
+        {active > 0 ? (
+          <span className="grid min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-accent-fg">
+            {active}
+          </span>
+        ) : null}
+        <ChevronDown className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
+      </button>
+
+      <div className={`mt-3 gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-5 ${expanded ? "grid" : "hidden"}`}>
         <select
           value={params.get("status") ?? ""}
           onChange={(event) => push({ status: event.target.value || null })}

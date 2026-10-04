@@ -103,7 +103,7 @@ export default async function EditCandidatePage(
         </PageHeader>
       </div>
 
-      <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           <CandidateEditForm
             candidate={candidate as unknown as CandidateFormValues}

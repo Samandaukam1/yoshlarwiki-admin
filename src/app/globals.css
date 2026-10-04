@@ -167,6 +167,16 @@ html {
   }
 }
 
+html {
+  /* Keng element (masalan jadval) sahifani ekrandan kengaytirsa, Android
+     Chrome butun sahifani kichraytirib "desktop" ko'rinishida ochadi.
+     clip — gorizontal toshishni kesadi, lekin scroll konteyner yaratmaydi
+     (sticky sarlavha buzilmaydi). */
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--yw-bg);
   color: var(--yw-text);
@@ -174,7 +184,7 @@ body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 ::selection {

@@ -9,6 +9,8 @@ import {
   ButtonLink,
   EmptyState,
   formatDateTime,
+  MobileItem,
+  MobileList,
   PageHeader,
   TableWrap,
   Td,
@@ -86,7 +88,41 @@ export default async function CandidatesPage(props: PageProps<"/nomzodlar">) {
           />
         </div>
       ) : (
-        <div className="mt-6">
+        <>
+        {/* Telefonda — kartochkalar, kengroq ekranda — jadval. */}
+        <div className="mt-6 md:hidden">
+          <MobileList>
+            {rows.map((item) => {
+              const category = item.category as { name: string } | null;
+              const candidateStatus = item.status as CandidateStatus;
+              return (
+                <MobileItem key={item.id} className="p-0">
+                  <Link href={`/nomzodlar/${item.id}`} className="flex items-center gap-3 p-3.5">
+                    <span className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-surface-2">
+                      {item.portrait_url ? (
+                        <Image src={item.portrait_url} alt="" fill sizes="56px" className="object-cover object-top" />
+                      ) : null}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14.5px] font-semibold text-ink">{item.full_name}</span>
+                      <span className="mt-0.5 block truncate text-[12.5px] text-ink-3">
+                        {category?.name ?? "Kategoriya yoʻq"}
+                      </span>
+                      <span className="mt-1.5 flex items-center gap-2 text-[12px] text-ink-3">
+                        <Badge tone={CANDIDATE_STATUS_TONES[candidateStatus] ?? "neutral"}>
+                          {CANDIDATE_STATUS_LABELS[candidateStatus] ?? candidateStatus}
+                        </Badge>
+                        <span className="tabular-nums">{item.view_count} koʻrish</span>
+                      </span>
+                    </span>
+                  </Link>
+                </MobileItem>
+              );
+            })}
+          </MobileList>
+        </div>
+
+        <div className="mt-6 hidden md:block">
           <TableWrap>
             <thead>
               <tr>
@@ -157,6 +193,7 @@ export default async function CandidatesPage(props: PageProps<"/nomzodlar">) {
             </tbody>
           </TableWrap>
         </div>
+        </>
       )}
     </>
   );
