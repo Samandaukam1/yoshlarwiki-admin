@@ -20,6 +20,7 @@ import {
   STATUS_TONES,
   type ApplicationStatus,
 } from "@/lib/constants";
+import { startOfTodayTashkent } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Arizalar" };
@@ -29,11 +30,8 @@ const PER_PAGE = 25;
 
 /** Filtr davri uchun boshlangʻich sanani qaytaradi. */
 function periodStart(period: string | undefined): string | null {
-  if (period === "today") {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    return start.toISOString();
-  }
+  // "Bugun" — Toshkent vaqti bo'yicha kun boshidan (server UTC'da ishlaydi).
+  if (period === "today") return startOfTodayTashkent();
   if (period === "7" || period === "30") {
     return new Date(Date.now() - Number(period) * 86_400_000).toISOString();
   }
@@ -116,7 +114,7 @@ export default async function ApplicationsPage(
   return (
     <>
       <PageHeader
-        title="Arizalar"
+        title={period === "today" ? "Bugungi arizalar" : "Arizalar"}
         description={`${total} ta ariza${status ? ` — ${STATUS_LABELS[status as ApplicationStatus]}` : ""}`}
       />
 

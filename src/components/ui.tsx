@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, type LucideIcon } from "lucide-react";
 
+import { TIME_ZONE } from "@/lib/dates";
+
 /* ------------------------------------------------------------------ */
 /* Tugmalar                                                           */
 /* ------------------------------------------------------------------ */
@@ -328,6 +330,8 @@ export function formatDateTime(value: string | null) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    // Server UTC'da ishlaydi — vaqt Toshkent bo'yicha ko'rsatilsin.
+    timeZone: TIME_ZONE,
   }).format(date);
 }
 
@@ -337,5 +341,6 @@ export function formatDate(value: string | null) {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+    timeZone: TIME_ZONE,
   }).format(new Date(value));
 }

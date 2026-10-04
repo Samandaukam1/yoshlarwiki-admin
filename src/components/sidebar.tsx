@@ -7,6 +7,7 @@ import {
   FolderTree,
   Image as ImageIcon,
   Inbox,
+  Info,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -30,6 +31,7 @@ const NAV = [
   { href: "/media", label: "Media", icon: ImageIcon },
   { href: "/seo", label: "SEO", icon: Search },
   { href: "/portrait-prompt", label: "Nomzod rasmi prompti", icon: Sparkles },
+  { href: "/biz-haqimizda", label: "Biz haqimizda", icon: Info },
   { href: "/sozlamalar", label: "Sozlamalar", icon: Settings },
 ];
 
@@ -132,8 +134,12 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobil sarlavha */}
-      <div className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-line bg-bg/90 px-4 backdrop-blur lg:hidden">
+      {/* Mobil sarlavha.
+          Fon to'liq (shaffof emas) va yuqoriga ekran balandligicha davom
+          etadi: iOS Safari / Telegram brauzerida sahifa yuqori panel ostiga
+          ham chiziladi va aks holda sarlavha tepasida scroll qilinayotgan
+          kontent ko'rinib qolardi. */}
+      <div className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-line bg-bg px-4 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-bg before:content-[''] lg:hidden">
         <button
           type="button"
           onClick={() => setOpen(true)}

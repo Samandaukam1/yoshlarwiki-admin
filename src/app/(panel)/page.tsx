@@ -22,6 +22,7 @@ import {
   STATUS_TONES,
   type ApplicationStatus,
 } from "@/lib/constants";
+import { startOfTodayTashkent } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Boshqaruv paneli" };
@@ -54,7 +55,15 @@ export default async function DashboardPage() {
   const admin = await requireAdmin();
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc("get_admin_stats");
+  // "Bugungi arizalar" alohida, Toshkent vaqti bo'yicha sanaladi —
+  // get_admin_stats() kunni UTC bo'yicha boshlaydi (Toshkentda 05:00).
+  const [{ data, error }, { count: todayCount }] = await Promise.all([
+    supabase.rpc("get_admin_stats"),
+    supabase
+      .from("applications")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", startOfTodayTashkent()),
+  ]);
   const stats = (data as unknown as AdminStats) ?? null;
 
   if (error || !stats) {
@@ -95,9 +104,9 @@ export default async function DashboardPage() {
         <StatCard
           icon={FileText}
           label="Bugungi arizalar"
-          value={stats.applications_today}
+          value={todayCount ?? stats.applications_today}
           hint={`Hafta ichida: ${stats.applications_week}`}
-          href="/arizalar"
+          href="/arizalar?sana=today"
         />
         <StatCard
           icon={Users}
