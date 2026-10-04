@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Award,
   ExternalLink,
   FolderTree,
   Image as ImageIcon,
@@ -27,6 +28,7 @@ const NAV = [
   { href: "/", label: "Boshqaruv paneli", icon: LayoutDashboard, exact: true },
   { href: "/arizalar", label: "Arizalar", icon: Inbox },
   { href: "/nomzodlar", label: "Nomzodlar", icon: Users },
+  { href: "/sertifikatlar", label: "Sertifikatlar", icon: Award },
   { href: "/kategoriyalar", label: "Kategoriyalar", icon: FolderTree },
   { href: "/media", label: "Media", icon: ImageIcon },
   { href: "/seo", label: "SEO", icon: Search },

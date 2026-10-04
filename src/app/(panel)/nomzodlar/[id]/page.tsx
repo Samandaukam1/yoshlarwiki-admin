@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, ExternalLink, Eye, Trash2 } from "lucide-react";
+import { ArrowLeft, Award, ExternalLink, Eye, Trash2 } from "lucide-react";
 
 import { CandidateEditForm, type CandidateFormValues } from "./edit-form";
 import {
@@ -96,6 +96,10 @@ export default async function EditCandidatePage(
             )}
             {status === "published" ? "Saytda koʻrish" : "Havolani ochish"}
           </a>
+          <Link href={`/sertifikatlar?nomzod=${candidate.id}`} className={btn("primary", "sm")}>
+            <Award className="size-4" strokeWidth={1.9} />
+            Sertifikat berish
+          </Link>
         </PageHeader>
       </div>
 

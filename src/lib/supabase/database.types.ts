@@ -618,6 +618,63 @@ export type Database = {
           },
         ]
       }
+      certificates: {
+        Row: {
+          candidate_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_revoked: boolean
+          issued_on: string
+          recipient_name: string
+          revoked_at: string | null
+          type: Database["public"]["Enums"]["certificate_type"]
+          updated_at: string
+        }
+        Insert: {
+          candidate_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_revoked?: boolean
+          issued_on?: string
+          recipient_name: string
+          revoked_at?: string | null
+          type: Database["public"]["Enums"]["certificate_type"]
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_revoked?: boolean
+          issued_on?: string
+          recipient_name?: string
+          revoked_at?: string | null
+          type?: Database["public"]["Enums"]["certificate_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -812,6 +869,7 @@ export type Database = {
         }[]
       }
       get_admin_stats: { Args: never; Returns: Json }
+      get_certificate: { Args: { p_code: string }; Returns: Json }
       get_public_stats: { Args: never; Returns: Json }
       increment_candidate_view: { Args: { p_slug: string }; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
@@ -860,6 +918,7 @@ export type Database = {
         | "rad_etildi"
         | "nomzodga_aylantirildi"
       candidate_status: "draft" | "published" | "archived"
+      certificate_type: "mualliflik" | "azolik"
       education_level:
         | "orta"
         | "orta_maxsus"
@@ -1008,6 +1067,7 @@ export const Constants = {
         "nomzodga_aylantirildi",
       ],
       candidate_status: ["draft", "published", "archived"],
+      certificate_type: ["mualliflik", "azolik"],
       education_level: [
         "orta",
         "orta_maxsus",

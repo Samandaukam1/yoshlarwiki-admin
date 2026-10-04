@@ -15,3 +15,14 @@ export function startOfTodayTashkent(now: Date = new Date()): string {
   local.setUTCHours(0, 0, 0, 0);
   return new Date(local.getTime() - TASHKENT_OFFSET_MS).toISOString();
 }
+
+/** Toshkent bo'yicha bugungi sana, "YYYY-MM-DD" (date input uchun). */
+export function todayTashkentDate(now: Date = new Date()): string {
+  return new Date(now.getTime() + TASHKENT_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** "2026-10-04" → "04.10.2026". */
+export function formatIsoDate(isoDate: string): string {
+  const [year, month, day] = isoDate.slice(0, 10).split("-");
+  return `${day}.${month}.${year}`;
+}
