@@ -333,3 +333,37 @@ body {
 [data-theme="dark"] .yw-watermark {
   opacity: 0.06;
 }
+
+/* ==========================================================================
+   Anketa: jinsga qarab aksent rangi (qiz — pushti, o'g'il — ko'k)
+   ========================================================================== */
+
+.yw-girl {
+  --yw-accent: #ec4899;
+  --yw-accent-hover: #db2777;
+  --yw-accent-text: #db2777;
+  --yw-accent-soft: #fdf2f8;
+  --yw-accent-soft-fg: #db2777;
+  --yw-accent-ring: rgb(236 72 153 / 0.35);
+}
+
+[data-theme="dark"] .yw-girl {
+  --yw-accent: #ec4899;
+  --yw-accent-hover: #f472b6;
+  --yw-accent-text: #f472b6;
+  --yw-accent-soft: #3b0a26;
+  --yw-accent-soft-fg: #f9a8d4;
+  --yw-accent-ring: rgb(244 114 182 / 0.45);
+}
+
+/* Shaffof PNG uchun shaxmat fon */
+.yw-checker {
+  background-color: var(--yw-surface-2);
+  background-image:
+    linear-gradient(45deg, var(--yw-line) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--yw-line) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--yw-line) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--yw-line) 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+}

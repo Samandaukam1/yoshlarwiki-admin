@@ -22,6 +22,7 @@ import {
   type CandidateStatus,
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
+import { USER_SITE_URL } from "@/lib/config";
 
 export const metadata: Metadata = { title: "Nomzodni tahrirlash" };
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export default async function EditCandidatePage(
 
   const writable = canWrite(admin);
   const status = candidate.status as CandidateStatus;
-  const siteUrl = process.env.NEXT_PUBLIC_USER_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = USER_SITE_URL;
 
   return (
     <>

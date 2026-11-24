@@ -13,6 +13,7 @@ import {
 } from "@/components/ui";
 import { canWrite, requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { USER_SITE_URL } from "@/lib/config";
 
 export const metadata: Metadata = { title: "SEO" };
 export const dynamic = "force-dynamic";
@@ -39,7 +40,7 @@ export default async function SeoPage() {
   ]);
 
   const defaults = (setting?.value ?? {}) as SeoDefaults;
-  const siteUrl = process.env.NEXT_PUBLIC_USER_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = USER_SITE_URL;
 
   const published = (candidates ?? []).filter((c) => c.status === "published");
   const incomplete = published.filter((c) => !c.seo_title || !c.seo_description);

@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
-const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-  : undefined;
+// src/lib/config.ts dagi bilan bir xil (next.config boshqa modullarni import qilmasin).
+const supabaseHost = new URL(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://olgrimictocmxhhwragu.supabase.co",
+).hostname;
 
 const nextConfig: NextConfig = {
   images: {

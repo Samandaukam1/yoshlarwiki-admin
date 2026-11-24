@@ -80,6 +80,14 @@ export const CANDIDATE_STATUS_TONES: Record<CandidateStatus, Tone> = {
   archived: "neutral",
 };
 
+/** Nomzod profili rangi (saytdagi profil sahifasi uchun). */
+export const THEME_COLORS = [
+  { value: "blue", label: "Och koʻk", swatch: "#7cc4fa", ink: "#0b4a7a" },
+  { value: "pink", label: "Och pushti", swatch: "#f9a8d4", ink: "#8a1d55" },
+  { value: "gold", label: "Gold", swatch: "#d4af37", ink: "#5c4710" },
+] as const;
+export type ThemeColor = (typeof THEME_COLORS)[number]["value"];
+
 export const EDUCATION_LEVELS = [
   { value: "orta", label: "Oʻrta" },
   { value: "orta_maxsus", label: "Oʻrta maxsus" },

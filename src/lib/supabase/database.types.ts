@@ -47,6 +47,143 @@ export type Database = {
         }
         Relationships: []
       }
+      anketa_links: {
+        Row: {
+          anketa_id: string
+          created_at: string
+          expires_at: string
+          token: string
+        }
+        Insert: {
+          anketa_id: string
+          created_at?: string
+          expires_at: string
+          token: string
+        }
+        Update: {
+          anketa_id?: string
+          created_at?: string
+          expires_at?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anketa_links_anketa_id_fkey"
+            columns: ["anketa_id"]
+            isOneToOne: true
+            referencedRelation: "anketalar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anketalar: {
+        Row: {
+          answers: Json
+          answers_fixed: Json | null
+          approved_at: string | null
+          candidate_id: string | null
+          created_at: string
+          created_by_admin: string | null
+          created_by_bot_admin: string | null
+          current_step: number
+          expires_at: string
+          full_name: string
+          gender: Database["public"]["Enums"]["gender"]
+          id: string
+          last_activity_at: string | null
+          opened_at: string | null
+          payment_confirmed_at: string | null
+          payment_confirmed_by: string | null
+          payment_requested_at: string | null
+          payment_status: Database["public"]["Enums"]["anketa_payment"]
+          photo_path: string | null
+          photo_url: string | null
+          photo_white_url: string | null
+          post_url: string | null
+          profile_url: string | null
+          published_at: string | null
+          seo: Json | null
+          status: Database["public"]["Enums"]["anketa_status"]
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json
+          answers_fixed?: Json | null
+          approved_at?: string | null
+          candidate_id?: string | null
+          created_at?: string
+          created_by_admin?: string | null
+          created_by_bot_admin?: string | null
+          current_step?: number
+          expires_at: string
+          full_name: string
+          gender: Database["public"]["Enums"]["gender"]
+          id?: string
+          last_activity_at?: string | null
+          opened_at?: string | null
+          payment_confirmed_at?: string | null
+          payment_confirmed_by?: string | null
+          payment_requested_at?: string | null
+          payment_status?: Database["public"]["Enums"]["anketa_payment"]
+          photo_path?: string | null
+          photo_url?: string | null
+          photo_white_url?: string | null
+          post_url?: string | null
+          profile_url?: string | null
+          published_at?: string | null
+          seo?: Json | null
+          status?: Database["public"]["Enums"]["anketa_status"]
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          answers_fixed?: Json | null
+          approved_at?: string | null
+          candidate_id?: string | null
+          created_at?: string
+          created_by_admin?: string | null
+          created_by_bot_admin?: string | null
+          current_step?: number
+          expires_at?: string
+          full_name?: string
+          gender?: Database["public"]["Enums"]["gender"]
+          id?: string
+          last_activity_at?: string | null
+          opened_at?: string | null
+          payment_confirmed_at?: string | null
+          payment_confirmed_by?: string | null
+          payment_requested_at?: string | null
+          payment_status?: Database["public"]["Enums"]["anketa_payment"]
+          photo_path?: string | null
+          photo_url?: string | null
+          photo_white_url?: string | null
+          post_url?: string | null
+          profile_url?: string | null
+          published_at?: string | null
+          seo?: Json | null
+          status?: Database["public"]["Enums"]["anketa_status"]
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anketalar_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anketalar_created_by_bot_admin_fkey"
+            columns: ["created_by_bot_admin"]
+            isOneToOne: false
+            referencedRelation: "bot_admins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       application_notes: {
         Row: {
           application_id: string
@@ -199,6 +336,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      bot_admins: {
+        Row: {
+          chat_id: number | null
+          created_at: string
+          created_by: string | null
+          full_name: string
+          id: string
+          is_active: boolean
+          last_seen_at: string | null
+          state: Json
+          telegram_id: number | null
+          telegram_username: string | null
+        }
+        Insert: {
+          chat_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          state?: Json
+          telegram_id?: number | null
+          telegram_username?: string | null
+        }
+        Update: {
+          chat_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          state?: Json
+          telegram_id?: number | null
+          telegram_username?: string | null
+        }
+        Relationships: []
+      }
+      bot_settings: {
+        Row: {
+          bot_token: string | null
+          apply_url: string | null
+          bot_username: string | null
+          channel: string | null
+          instagram_url: string | null
+          telegram_url: string | null
+          connected_at: string | null
+          id: number
+          link_ttl_hours: number
+          updated_at: string
+          updated_by: string | null
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          bot_token?: string | null
+          apply_url?: string | null
+          bot_username?: string | null
+          channel?: string | null
+          instagram_url?: string | null
+          telegram_url?: string | null
+          connected_at?: string | null
+          id?: number
+          link_ttl_hours?: number
+          updated_at?: string
+          updated_by?: string | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          bot_token?: string | null
+          apply_url?: string | null
+          bot_username?: string | null
+          channel?: string | null
+          instagram_url?: string | null
+          telegram_url?: string | null
+          connected_at?: string | null
+          id?: number
+          link_ttl_hours?: number
+          updated_at?: string
+          updated_by?: string | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
       }
       candidate_achievements: {
         Row: {
@@ -490,6 +714,7 @@ export type Database = {
           created_by: string | null
           direction: string | null
           full_name: string
+          gender: Database["public"]["Enums"]["gender"] | null
           id: string
           intro: string | null
           is_featured: boolean
@@ -512,6 +737,7 @@ export type Database = {
           specialization: string | null
           status: Database["public"]["Enums"]["candidate_status"]
           tagline: string | null
+          theme_color: string
           title: string | null
           updated_at: string
           video_url: string | null
@@ -528,6 +754,7 @@ export type Database = {
           created_by?: string | null
           direction?: string | null
           full_name: string
+          gender?: Database["public"]["Enums"]["gender"] | null
           id?: string
           intro?: string | null
           is_featured?: boolean
@@ -550,6 +777,7 @@ export type Database = {
           specialization?: string | null
           status?: Database["public"]["Enums"]["candidate_status"]
           tagline?: string | null
+          theme_color?: string
           title?: string | null
           updated_at?: string
           video_url?: string | null
@@ -566,6 +794,7 @@ export type Database = {
           created_by?: string | null
           direction?: string | null
           full_name?: string
+          gender?: Database["public"]["Enums"]["gender"] | null
           id?: string
           intro?: string | null
           is_featured?: boolean
@@ -588,6 +817,7 @@ export type Database = {
           specialization?: string | null
           status?: Database["public"]["Enums"]["candidate_status"]
           tagline?: string | null
+          theme_color?: string
           title?: string | null
           updated_at?: string
           video_url?: string | null
@@ -910,6 +1140,13 @@ export type Database = {
     Enums: {
       admin_role: "owner" | "admin" | "editor" | "viewer"
       age_range: "14_18" | "19_24" | "25_29" | "35_plus"
+      anketa_payment: "yoq" | "kutilmoqda" | "tolandi" | "tolanmadi"
+      anketa_status:
+        | "toldirilmoqda"
+        | "yuborildi"
+        | "tasdiqlandi"
+        | "nashr_etildi"
+        | "rad_etildi"
       application_status:
         | "yangi"
         | "boglanildi"
@@ -1058,6 +1295,14 @@ export const Constants = {
     Enums: {
       admin_role: ["owner", "admin", "editor", "viewer"],
       age_range: ["14_18", "19_24", "25_29", "35_plus"],
+      anketa_payment: ["yoq", "kutilmoqda", "tolandi", "tolanmadi"],
+      anketa_status: [
+        "toldirilmoqda",
+        "yuborildi",
+        "tasdiqlandi",
+        "nashr_etildi",
+        "rad_etildi",
+      ],
       application_status: [
         "yangi",
         "boglanildi",

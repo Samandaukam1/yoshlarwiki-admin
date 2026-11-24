@@ -28,6 +28,7 @@ import {
 import { canWrite, requireAdmin } from "@/lib/auth";
 import { formatIsoDate, todayTashkentDate } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { USER_SITE_URL } from "@/lib/config";
 
 export const metadata: Metadata = { title: "Sertifikatlar" };
 export const dynamic = "force-dynamic";
@@ -61,7 +62,7 @@ export default async function CertificatesPage(props: PageProps<"/sertifikatlar"
   const preselect = str("nomzod");
 
   const supabase = await createClient();
-  const siteUrl = process.env.NEXT_PUBLIC_USER_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = USER_SITE_URL;
 
   let query = supabase
     .from("certificates")

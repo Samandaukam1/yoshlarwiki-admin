@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/config";
+
+// /anketa — nomzodlar bir martalik havola orqali kiradi; /api/telegram — bot webhook'i.
+const PUBLIC_PATHS = ["/login", "/auth", "/anketa", "/api/telegram"];
 
 /**
  * Har bir so'rovda Supabase sessiyasini yangilaydi va admin sahifalarini
@@ -12,8 +15,8 @@ export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {

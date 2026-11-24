@@ -2,15 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 import type { Database } from "./database.types";
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../config";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!url || !anonKey) {
-  throw new Error(
-    "NEXT_PUBLIC_SUPABASE_URL va NEXT_PUBLIC_SUPABASE_ANON_KEY belgilanishi shart.",
-  );
-}
+const url = SUPABASE_URL;
+const anonKey = SUPABASE_ANON_KEY;
 
 /**
  * Server komponentlar va server actionlar uchun Supabase mijozi.
@@ -19,7 +14,7 @@ if (!url || !anonKey) {
 export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(url!, anonKey!, {
+  return createServerClient<Database>(url, anonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

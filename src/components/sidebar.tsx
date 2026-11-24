@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Award,
+  Bot,
+  ClipboardList,
   ExternalLink,
   FolderTree,
   Image as ImageIcon,
@@ -28,6 +30,8 @@ const NAV = [
   { href: "/", label: "Boshqaruv paneli", icon: LayoutDashboard, exact: true },
   { href: "/arizalar", label: "Arizalar", icon: Inbox },
   { href: "/nomzodlar", label: "Nomzodlar", icon: Users },
+  { href: "/anketalar", label: "Anketalar", icon: ClipboardList },
+  { href: "/bot", label: "Telegram bot", icon: Bot },
   { href: "/sertifikatlar", label: "Sertifikatlar", icon: Award },
   { href: "/kategoriyalar", label: "Kategoriyalar", icon: FolderTree },
   { href: "/media", label: "Media", icon: ImageIcon },
@@ -54,10 +58,12 @@ export function Sidebar({
   user,
   siteUrl,
   newApplications,
+  newAnketalar = 0,
 }: {
   user: { name: string; email: string; role: string };
   siteUrl: string;
   newApplications: number;
+  newAnketalar?: number;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -95,6 +101,11 @@ export function Sidebar({
             {item.href === "/arizalar" && newApplications > 0 ? (
               <span className="grid min-w-5 shrink-0 place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-accent-fg">
                 {newApplications > 99 ? "99+" : newApplications}
+              </span>
+            ) : null}
+            {item.href === "/anketalar" && newAnketalar > 0 ? (
+              <span className="grid min-w-5 shrink-0 place-items-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-accent-fg">
+                {newAnketalar > 99 ? "99+" : newAnketalar}
               </span>
             ) : null}
           </Link>

@@ -13,7 +13,7 @@ import {
   inputClass,
   textareaClass,
 } from "@/components/ui";
-import { slugify } from "@/lib/constants";
+import { slugify, THEME_COLORS } from "@/lib/constants";
 
 type Option = { id: string; name: string };
 
@@ -46,6 +46,7 @@ export type CandidateFormValues = {
   canonical_url: string | null;
   keywords: string[];
   no_index: boolean;
+  theme_color?: string | null;
 };
 
 export function CandidateEditForm({
@@ -358,6 +359,35 @@ export function CandidateEditForm({
             />
             Tanlanganlar roʻyxatida koʻrsatilsin
           </label>
+        </div>
+      </Card>
+
+      {/* Profil rangi */}
+      <Card>
+        <CardTitle>Profil rangi</CardTitle>
+        <p className="-mt-2 mb-4 text-[13px] text-ink-2">Saytdagi profil sahifasi shu rangda koʻrinadi.</p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {THEME_COLORS.map((color) => (
+            <label
+              key={color.value}
+              className="group relative flex cursor-pointer items-center gap-3 rounded-card border border-line p-3.5 transition-colors hover:border-line-strong has-[:checked]:border-accent has-[:checked]:bg-accent-soft"
+            >
+              <input
+                type="radio"
+                name="theme_color"
+                value={color.value}
+                disabled={disabled}
+                defaultChecked={(candidate.theme_color ?? "blue") === color.value}
+                className="peer sr-only"
+              />
+              <span
+                className="size-9 shrink-0 rounded-full ring-2 ring-surface ring-offset-2 ring-offset-line"
+                style={{ background: color.swatch }}
+              />
+              <span className="text-[14px] font-semibold text-ink">{color.label}</span>
+              <Check className="ml-auto hidden size-4 text-accent-text peer-checked:block" strokeWidth={2.4} />
+            </label>
+          ))}
         </div>
       </Card>
 

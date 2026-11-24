@@ -6,6 +6,7 @@ import { withDefaults, type AboutContent } from "./types";
 import { PageHeader } from "@/components/ui";
 import { canWrite, requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { USER_SITE_URL } from "@/lib/config";
 
 export const metadata: Metadata = { title: "Biz haqimizda" };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function AboutSettingsPage() {
   const about = withDefaults((byKey.about ?? null) as Partial<AboutContent> | null);
   const contacts = (byKey.contacts ?? {}) as { telegram?: string; instagram?: string };
 
-  const siteUrl = process.env.NEXT_PUBLIC_USER_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = USER_SITE_URL;
 
   return (
     <>

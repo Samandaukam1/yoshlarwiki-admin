@@ -1,15 +1,17 @@
 import { Sidebar } from "@/components/sidebar";
 import { requireAdmin, ROLE_LABELS } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { USER_SITE_URL } from "@/lib/config";
 
 export default async function PanelLayout({ children }: LayoutProps<"/">) {
   const admin = await requireAdmin();
   const supabase = await createClient();
 
-  const { count } = await supabase
-    .from("applications")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "yangi");
+  const [{ count }, { count: anketaCount }] = await Promise.all([
+    supabase.from("applications").select("id", { count: "exact", head: true }).eq("status", "yangi"),
+    // Tekshiruv kutayotgan anketalar (jadval bo'lmasa — 0).
+    supabase.from("anketalar").select("id", { count: "exact", head: true }).eq("status", "yuborildi"),
+  ]);
 
   return (
     <div className="min-h-dvh">
@@ -19,8 +21,9 @@ export default async function PanelLayout({ children }: LayoutProps<"/">) {
           email: admin.email,
           role: ROLE_LABELS[admin.role] ?? admin.role,
         }}
-        siteUrl={process.env.NEXT_PUBLIC_USER_SITE_URL ?? "http://localhost:3000"}
+        siteUrl={USER_SITE_URL}
         newApplications={count ?? 0}
+        newAnketalar={anketaCount ?? 0}
       />
 
       {/* Telefonda pastda tab-panel bor — kontent uning ostida qolmasin. */}
