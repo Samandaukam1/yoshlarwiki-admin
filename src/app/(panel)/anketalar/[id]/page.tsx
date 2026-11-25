@@ -5,6 +5,8 @@ import { ArrowLeft, Download, ExternalLink, ImageOff, Trash2 } from "lucide-reac
 
 import { CopyButton } from "./copy-button";
 import { AnketaAction } from "./detail-actions";
+import { AnketaEditForm } from "./edit-form";
+import { PhotoReplace } from "./photo-replace";
 import { deleteAnketa } from "../actions";
 import { LiveRefresh } from "../live-refresh";
 import { StatusBadge } from "../table";
@@ -20,6 +22,7 @@ import {
   type AnketaAnswers,
   type StepKey,
 } from "@/lib/anketa";
+import { candidateMessagePlain, candidateMessageRich } from "@/lib/candidate-message";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Anketa" };
@@ -46,6 +49,9 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
   const filling = anketa.status === "toldirilmoqda";
   const currentKey = filling ? STEPS[anketa.current_step]?.key : undefined;
   const published = anketa.status === "nashr_etildi";
+  const editable = writable && ["yuborildi", "tasdiqlandi", "nashr_etildi"].includes(anketa.status);
+  const awaitingPayment =
+    (anketa.status === "yuborildi" || anketa.status === "tasdiqlandi") && anketa.payment_status !== "tolandi";
   const fullName = a.full_name || anketa.full_name;
 
   return (
@@ -78,6 +84,8 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
         {/* ---------------- Javoblar ---------------- */}
         <div className="grid min-w-0 content-start gap-4">
+          {editable ? <AnketaEditForm id={id} initial={a} published={published} /> : null}
+
           <section className={`rounded-card border bg-surface p-5 ${currentKey === "final" ? "border-accent shadow-yw" : "border-line"}`}>
             <h2 className="text-[14px] font-bold text-ink">Aloqa</h2>
             <ul className="mt-3 grid gap-2 text-[13.5px] text-ink-2">
@@ -217,7 +225,8 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
                     <CopyButton
                       full
                       label="Nomzodga xabarni nusxalash"
-                      text={`Assalomu alaykum, ${fullName}! Profilingiz tayyor: ${anketa.profile_url}${anketa.post_url ? `\nTelegram post: ${anketa.post_url}` : ""}`}
+                      text={candidateMessagePlain(fullName, anketa.profile_url, anketa.post_url)}
+                      html={candidateMessageRich(fullName, anketa.profile_url, anketa.post_url)}
                     />
                   ) : null}
                 </div>
@@ -227,7 +236,7 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
                 href={`/nomzodlar/${anketa.candidate_id}`}
                 className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-medium text-accent-text"
               >
-                Profilni tahrirlash (rang, matn) <ExternalLink className="size-3.5" />
+                Profilni tahrirlash <ExternalLink className="size-3.5" />
               </Link>
             </Card>
           ) : null}
@@ -236,11 +245,8 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
             <CardTitle>Jarayon</CardTitle>
             <ol className="grid gap-4">
               <Stage n={1} done={!filling} title="Anketa yuborildi" date={anketa.submitted_at} />
-              <Stage n={2} done={!!anketa.approved_at} title="Tasdiqlash" date={anketa.approved_at}>
-                {anketa.status === "yuborildi" && writable ? <AnketaAction id={id} kind="approve" full /> : null}
-              </Stage>
               <Stage
-                n={3}
+                n={2}
                 done={anketa.payment_status === "tolandi"}
                 title="Toʻlov tekshiruvi"
                 date={anketa.payment_confirmed_at}
@@ -248,22 +254,22 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
                   anketa.payment_status === "tolandi" || anketa.payment_status === "tolanmadi"
                     ? `${PAYMENT_LABELS[anketa.payment_status]}${anketa.payment_confirmed_by ? ` — ${anketa.payment_confirmed_by}` : ""}`
                     : anketa.payment_status === "kutilmoqda"
-                      ? `${botAdmin?.full_name ?? "Admin"} javobi kutilmoqda…`
+                      ? `Botda ${botAdmin?.full_name ?? "admin"} javobi kutilmoqda. «Ha» bosilsa — avtomatik chop etiladi.`
                       : botAdmin
                         ? `Soʻrov ${botAdmin.full_name}ga boradi`
                         : undefined
                 }
               >
-                {anketa.status === "tasdiqlandi" && anketa.payment_status !== "tolandi" && writable ? (
+                {awaitingPayment && writable ? (
                   <div className="grid gap-1">
                     <AnketaAction id={id} kind="payment" full />
                     <AnketaAction id={id} kind="manual" full />
                   </div>
                 ) : null}
               </Stage>
-              <Stage n={4} done={published} title="Saytda chiqarish va Telegram post" date={anketa.published_at}>
-                {anketa.status === "tasdiqlandi" && writable ? (
-                  <AnketaAction id={id} kind="publish" full disabled={anketa.payment_status !== "tolandi"} />
+              <Stage n={3} done={published} title="Saytda chiqarish va Telegram post" date={anketa.published_at}>
+                {!published && anketa.payment_status === "tolandi" && writable ? (
+                  <AnketaAction id={id} kind="publish" full />
                 ) : null}
                 {published && !anketa.post_url && writable ? <AnketaAction id={id} kind="repost" full /> : null}
               </Stage>
@@ -279,11 +285,21 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={anketa.photo_url} alt={fullName} className="size-full object-contain" />
                   </div>
-                  {anketa.photo_white_url ? (
-                    <div className="aspect-[4/5] overflow-hidden rounded-photo border border-line bg-white">
+                  {anketa.post_image_url || anketa.photo_white_url ? (
+                    <a
+                      href={anketa.post_image_url ?? anketa.photo_white_url ?? "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Telegram post rasmi"
+                      className="aspect-[4/5] overflow-hidden rounded-photo border border-line bg-[#06155a]"
+                    >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={anketa.photo_white_url} alt={`${fullName} — post`} className="size-full object-contain" />
-                    </div>
+                      <img
+                        src={anketa.post_image_url ?? anketa.photo_white_url ?? ""}
+                        alt={`${fullName} — post`}
+                        className="size-full object-contain"
+                      />
+                    </a>
                   ) : null}
                 </div>
                 <a href={anketa.photo_url} target="_blank" rel="noopener noreferrer" download className={btn("secondary", "sm", "mt-3 w-full")}>
@@ -297,6 +313,7 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
                 </span>
               </div>
             )}
+            {editable ? <PhotoReplace id={id} /> : null}
           </Card>
 
           {writable ? (

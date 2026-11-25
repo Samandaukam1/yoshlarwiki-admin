@@ -225,8 +225,8 @@ export type PaymentStatus = "yoq" | "kutilmoqda" | "tolandi" | "tolanmadi";
 
 export const ANKETA_STATUS_LABELS: Record<AnketaStatus, string> = {
   toldirilmoqda: "Toʻldirilmoqda",
-  yuborildi: "Tekshiruv kutilmoqda",
-  tasdiqlandi: "Tasdiqlangan",
+  yuborildi: "Toʻlov kutilmoqda",
+  tasdiqlandi: "Chop etilmoqda",
   nashr_etildi: "Saytda",
   rad_etildi: "Rad etilgan",
 };

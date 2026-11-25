@@ -1,10 +1,10 @@
 # Telegram bot va anketa — ishga tushirish
 
 ## 1. Supabase
-Mavjud YoshlarWiki bazasida `supabase/migrations/20261124190000_telegram_bot_anketa.sql` migratsiyasini SQL Editor orqali ishga tushiring.
+Mavjud YoshlarWiki bazasida avvalgi migratsiyadan keyin `supabase/migrations/20261125182400_ariza_bot_and_post_templates.sql` faylini qoʻllang. Yangi profillar uchun `standard` rangi ishlatiladi.
 
 ## 2. Vercel (Settings → Environment Variables)
-Bot va anketa uchun serverdagi quyidagi maxfiy kalit kerak:
+Faqat **bitta** kalit kerak:
 
 | Kalit | Qiymat |
 |---|---|
@@ -22,12 +22,25 @@ Ixtiyoriy: `ANTHROPIC_API_KEY` (AI imlo tuzatish), `NEXT_PUBLIC_ADMIN_URL` (o'z 
 Admin panel → **Telegram bot** → «Telegram kanal va post havolalari»: kanal (`https://t.me/kanal`), Instagram, Telegram va ariza uchun sayt havolasi. Botni kanalga **admin** qiling (xabar yuborish huquqi bilan).
 
 ## Jarayon
-1. **Botda** faqat ikki tugma: 📝 Anketa yaratish va 📊 Statistika. Anketa yaratish → nomzod jinsi → F.I.Sh → nusxalanadigan tayyor matn (havola bilan).
-2. **Nomzod** anketani toʻldiradi (qizlar — pushti, oʻgʻil bolalar — koʻk). Rasm yuklanganda foni brauzerda avtomatik olib tashlanadi, oq fonli post rasmi ham tayyorlanadi.
-3. **Admin panel → Anketalar** — har 5 soniyada oʻzi yangilanadi. Yuborilgan anketa haqida botga xabar ketmaydi.
-4. **Tasdiqlash** → profil (qoralama, rangi jinsga qarab). **Tekshirish** → faqat havolani yaratgan adminga: nomzod username’i, telefoni, «chat» tugmasi, ✅ Ha / ❌ Yoʻq. «Ha» → toʻlov avtomatik belgilanadi.
-5. **Saytda chiqarish** → profil saytda + kanalga oq fonli rasm va chiroyli matnli post (ostida Instagram | Telegram havolalari) → yaratgan adminga: F.I.Sh, tg username, profil havolasi, post havolasi. Panelda ham «Profil tayyor» kartasi va nusxalash tugmalari.
-6. **Nomzodlar → profil → Profil rangi:** och koʻk / och pushti / gold.
+1. **Botda** ikki tugma: 📝 Anketa yaratish va 📊 Statistika. Anketa yaratish → nomzod jinsi → F.I.Sh → nusxalanadigan tayyor matn (havola bilan).
+2. **Nomzod** anketani toʻldiradi (qizlar — pushti, oʻgʻil bolalar — koʻk). Rasm yuklanganda foni brauzerda avtomatik olib tashlanadi.
+3. Nomzod «Yuborish»ni bosishi bilan havolani yaratgan adminga botda xabar keladi: **«… anketani toʻldirdi. 💳 Toʻlov qildimi? ✅ Ha / ❌ Yoʻq»**.
+4. **✅ Ha** → hammasi avtomatik: profil yaratiladi va saytda chiqadi, kanalga shablonli post ketadi, mos ariza «Nomzodga aylantirildi» boʻladi, adminga «Profil tayyor» va nomzodga forward qilinadigan chiroyli xabar keladi (WEB SAHIFA / TELEGRAM — havolalar F.I.Sh ichida).
+   **❌ Yoʻq** → anketa «Toʻlanmagan» boʻlib qoladi; keyin admin panelda «Qoʻlda: toʻlov qilingan → chop etish» bosiladi.
+5. **Admin panel → Anketalar → anketa:** «Maʼlumotlarni tahrirlash» va «Rasmni almashtirish» (foni aniq model bilan avtomatik kesiladi). Profil saytda boʻlsa, saqlanganda profil ham, kanaldagi post ham (rasm va matn) avtomatik yangilanadi — post havolasi oʻzgarmaydi. Buning uchun bot kanalda **«Xabarlarni tahrirlash»** huquqiga ega boʻlishi kerak.
+6. **Profil rangi:** Nomzodlar → profil → «Profil rangi»: Standart / Och koʻk / Och pushti / Gold. Faqat saytdagi profil sahifasining orqa foni oʻzgaradi. Yangi profillar «Standart» boʻlib yaratiladi.
+
+## Telegram post rasmi (shablon)
+`src/assets/post/template.jpg` (1254×1254) ustiga: oʻngda nomzodning fonsiz rasmi, 1-qutida F.I.Sh, 2-qutida taʼlim, 3-qutida eng katta yutuq.
+- Matnni AI emas, kod qisqartiradi: mashhur oliygohlar qisqartmasi (TATU, OʻzMU…), «talabasi», «3-kurs» kabi soʻzlar olib tashlanadi; qutiga sigʻmasa shrift kichrayadi, oxirida «…».
+- Yutuq boʻlmasa `template-2.jpg` (3-qutisiz) ishlatiladi.
+- Shablonni almashtirish: shu ikki faylni bir xil oʻlchamda (1254×1254) yangisiga almashtiring.
+
+## Ariza boshqaruv bot
+Admin panel → **Ariza boshqaruv bot**. Anketa botidan **alohida** bot kerak (@BotFather → /newbot).
+1. Token va username → **Botni ulash**.
+2. **Bot adminlari** → ism + **Telegram ID** (faqat ID orqali ishlaydi, begonaga hech narsa koʻrsatmaydi). ID’ni bilmasangiz, odam botga /start yozsin — bot ID’ni koʻrsatadi.
+3. Botda: **🆕 Yangi arizalar**, **📋 Jami arizalar** (10 tadan, ⬅️ ➡️ bilan), **❌ Arizani bekor qilish** (Telegram username orqali, tasdiqlansa «Rad etildi»).
 
 Muddati oʻtgan havolalarni har soatda tozalash (ixtiyoriy, pg_cron):
 ```sql

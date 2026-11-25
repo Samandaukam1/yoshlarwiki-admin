@@ -137,7 +137,7 @@ export function profileUrlFor(slug: string): string {
 }
 
 /* ------------------------------------------------------------------ */
-/* Tasdiqlash → nomzod profili (qoralama)                             */
+/* Nomzod profili (qoralama → chop etish)                             */
 /* ------------------------------------------------------------------ */
 
 async function uniqueSlug(db: Db, base: string): Promise<string> {
@@ -156,26 +156,19 @@ const SOCIAL_BASE: Record<string, string> = {
   telegram: "https://t.me/",
 };
 
-export async function createCandidateFromAnketa(
-  anketa: Anketa,
-  adminId: string,
-): Promise<{ ok: true; candidateId: string } | { ok: false; message: string }> {
-  const db = createAdminClient();
+/** Anketadan nomzod profilining asosiy maydonlari (slug/status/created_by'siz). */
+function candidateFields(anketa: Anketa) {
   const a: AnketaAnswers = sanitizeAnswers(anketa.answers_fixed ?? anketa.answers);
   const seo = (anketa.seo ?? {}) as Partial<AnketaSeo>;
   const fullName = a.full_name || anketa.full_name;
-  const slug = await uniqueSlug(db, fullName);
-
   const about = [a.about, a.extra ? `Qoʻshimcha: ${a.extra}` : ""].filter(Boolean).join("\n\n");
 
-  const { data: candidate, error } = await db
-    .from("candidates")
-    .insert({
+  return {
+    a,
+    fullName,
+    fields: {
       full_name: fullName,
-      slug,
       gender: anketa.gender,
-      theme_color: anketa.gender === "ayol" ? "pink" : "blue",
-      status: "draft",
       title: seo.title || a.activity || null,
       intro: seo.intro || null,
       about: about || null,
@@ -193,16 +186,12 @@ export async function createCandidateFromAnketa(
       og_description: seo.og_description || null,
       og_image_url: anketa.photo_url,
       keywords: seo.keywords ?? [],
-      created_by: adminId,
-    })
-    .select("id")
-    .single();
+    },
+  };
+}
 
-  if (error || !candidate) {
-    return { ok: false, message: `Profil yaratilmadi: ${error?.message ?? "nomaʼlum xato"}` };
-  }
-
-  const id = candidate.id;
+/** Ta'lim, tajriba, yutuq, loyiha va ijtimoiy tarmoqlar — profilga yoziladi. */
+async function insertCandidateDetails(db: Db, id: string, a: AnketaAnswers) {
   const jobs: PromiseLike<unknown>[] = [];
 
   if (a.study_place) {
@@ -269,32 +258,77 @@ export async function createCandidateFromAnketa(
   // Bir xil havola ikki marta yozilmasin
   const seen = new Set<string>();
   const uniqueSocials = socials.filter((x) => {
+    if (!x.url) return false;
     const key = x.url.toLowerCase().replace(/\/+$/, "");
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
-  socials.length = 0;
-  socials.push(...uniqueSocials);
-  if (socials.length) {
+  if (uniqueSocials.length) {
     jobs.push(
       db.from("candidate_social_links").insert(
-        socials.map((x, i) => ({ candidate_id: id, platform: x.platform, url: x.url, sort_order: i })),
+        uniqueSocials.map((x, i) => ({ candidate_id: id, platform: x.platform, url: x.url, sort_order: i })),
       ),
     );
   }
 
   await Promise.all(jobs);
+}
+
+export async function createCandidateFromAnketa(
+  anketa: Anketa,
+  adminId: string | null,
+): Promise<{ ok: true; candidateId: string } | { ok: false; message: string }> {
+  const db = createAdminClient();
+  const { a, fullName, fields } = candidateFields(anketa);
+  const slug = await uniqueSlug(db, fullName);
+
+  const { data: candidate, error } = await db
+    .from("candidates")
+    .insert({ ...fields, slug, status: "draft", theme_color: "standard", created_by: adminId })
+    .select("id")
+    .single();
+
+  if (error || !candidate) {
+    return { ok: false, message: `Profil yaratilmadi: ${error?.message ?? "nomaʼlum xato"}` };
+  }
+
+  await insertCandidateDetails(db, candidate.id, a);
 
   await db
     .from("anketalar")
     .update({
       status: "tasdiqlandi",
-      candidate_id: id,
+      candidate_id: candidate.id,
       approved_at: new Date().toISOString(),
       profile_url: profileUrlFor(slug),
     })
     .eq("id", anketa.id);
 
-  return { ok: true, candidateId: id };
+  return { ok: true, candidateId: candidate.id };
+}
+
+/**
+ * Anketa tahrirlangandan keyin profilni yangilash: asosiy maydonlar va
+ * ta'lim / tajriba / yutuq / loyiha / ijtimoiy tarmoqlar anketadan qayta yoziladi.
+ * Slug (profil havolasi) va holat o'zgarmaydi.
+ */
+export async function updateCandidateFromAnketa(anketa: Anketa): Promise<{ ok: boolean; message?: string }> {
+  if (!anketa.candidate_id) return { ok: false, message: "Profil hali yaratilmagan." };
+  const db = createAdminClient();
+  const id = anketa.candidate_id;
+  const { a, fields } = candidateFields(anketa);
+
+  const { error } = await db.from("candidates").update(fields).eq("id", id);
+  if (error) return { ok: false, message: `Profil yangilanmadi: ${error.message}` };
+
+  await Promise.all([
+    db.from("candidate_education").delete().eq("candidate_id", id),
+    db.from("candidate_experience").delete().eq("candidate_id", id),
+    db.from("candidate_achievements").delete().eq("candidate_id", id),
+    db.from("candidate_projects").delete().eq("candidate_id", id),
+    db.from("candidate_social_links").delete().eq("candidate_id", id),
+  ]);
+  await insertCandidateDetails(db, id, a);
+  return { ok: true };
 }

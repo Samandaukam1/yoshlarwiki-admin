@@ -1,5 +1,5 @@
 /**
- * Brauzerda rasm fonini olib tashlash (MODNet — portretlar uchun maxsus model).
+ * Brauzerda rasm fonini olib tashlash (MODNet yoki aniqroq BiRefNet lite).
  *
  * transformers.js CDN'dan dinamik yuklanadi — paketga qo'shilmaydi va Vercel
  * build'iga ta'sir qilmaydi. Model (~25 MB) birinchi marta yuklanadi, keyin
@@ -11,8 +11,21 @@
  */
 
 const TRANSFORMERS_CDN = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3";
-const MODEL_ID = "Xenova/modnet";
 const MAX_SIDE = 2048;
+
+/**
+ * Modellar:
+ *  - fast:    MODNet (~25 MB) — anketada, telefonda ham tez ishlaydi.
+ *  - precise: BiRefNet lite (~115 MB, MIT) — admin panelda rasm almashtirilganda;
+ *             soch va kiyim chetlarini ancha aniq kesadi. Bir marta yuklanadi,
+ *             keyin brauzer keshida qoladi. Yuklanmasa — MODNet ishlatiladi.
+ */
+export type BgQuality = "fast" | "precise";
+
+const MODELS: Record<BgQuality, { id: string; input: string; output: string; sigmoid: boolean }> = {
+  fast: { id: "Xenova/modnet", input: "input", output: "output", sigmoid: false },
+  precise: { id: "onnx-community/BiRefNet_lite-ONNX", input: "input_image", output: "output_image", sigmoid: true },
+};
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Loaded = { model: any; processor: any; RawImage: any };
@@ -20,29 +33,49 @@ type Loaded = { model: any; processor: any; RawImage: any };
 // Bundler (Turbopack/Webpack) bu importni ushlamasligi uchun.
 const importFromUrl = new Function("url", "return import(url)") as (url: string) => Promise<any>;
 
-let loading: Promise<Loaded> | null = null;
+const loading: Partial<Record<BgQuality, Promise<Loaded>>> = {};
 
-function loadModel(): Promise<Loaded> {
-  if (!loading) {
-    loading = (async () => {
+function loadModel(quality: BgQuality = "fast"): Promise<Loaded> {
+  if (!loading[quality]) {
+    const promise = (async () => {
       const t = await importFromUrl(TRANSFORMERS_CDN);
       t.env.allowLocalModels = false;
+      const id = MODELS[quality].id;
+      const webgpu = quality === "precise" && typeof navigator !== "undefined" && "gpu" in navigator;
       const [model, processor] = await Promise.all([
-        t.AutoModel.from_pretrained(MODEL_ID, { dtype: "fp32" }),
-        t.AutoProcessor.from_pretrained(MODEL_ID),
+        t.AutoModel.from_pretrained(
+          id,
+          quality === "precise" ? { dtype: "fp16", ...(webgpu ? { device: "webgpu" } : {}) } : { dtype: "fp32" },
+        ),
+        t.AutoProcessor.from_pretrained(id),
       ]);
       return { model, processor, RawImage: t.RawImage };
     })();
-    loading.catch(() => {
-      loading = null;
+    loading[quality] = promise;
+    promise.catch(() => {
+      delete loading[quality];
     });
   }
-  return loading;
+  return loading[quality]!;
 }
 
 /** Modelni oldindan yuklab qo'yish (sahifa ochilganda). */
-export function preloadBackgroundModel() {
-  void loadModel().catch(() => undefined);
+export function preloadBackgroundModel(quality: BgQuality = "fast") {
+  void loadModel(quality).catch(() => undefined);
+}
+
+/** Fon niqobi (0–255) — rasm o'lchamida. */
+async function predictMask(quality: BgQuality, image: HTMLCanvasElement, w: number, h: number): Promise<Uint8Array> {
+  const { model, processor, RawImage } = await loadModel(quality);
+  const spec = MODELS[quality];
+  const input = await RawImage.fromURL(URL.createObjectURL(await toBlob(image, "image/png")));
+  const { pixel_values } = await processor(input);
+  const outputs = await model({ [spec.input]: pixel_values });
+  let tensor = outputs[spec.output] ?? Object.values(outputs)[0];
+  tensor = tensor[0];
+  if (spec.sigmoid) tensor = tensor.sigmoid();
+  const mask = await RawImage.fromTensor(tensor.mul(255).to("uint8")).resize(w, h);
+  return mask.data as Uint8Array;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -132,7 +165,7 @@ export type ProcessedPhoto = {
 
 export async function processPortrait(
   file: File,
-  options: { removeBackground: boolean; onStatus?: (text: string) => void },
+  options: { removeBackground: boolean; quality?: BgQuality; onStatus?: (text: string) => void },
 ): Promise<ProcessedPhoto> {
   const url = URL.createObjectURL(file);
   try {
@@ -150,15 +183,19 @@ export async function processPortrait(
       removed = true; // AI allaqachon shaffof PNG bergan
     } else if (options.removeBackground) {
       try {
-        options.onStatus?.("AI model yuklanmoqda…");
-        const { model, processor, RawImage } = await loadModel();
-        options.onStatus?.("Fon olib tashlanmoqda…");
-
-        const input = await RawImage.fromURL(URL.createObjectURL(await toBlob(base.c, "image/png")));
-        const { pixel_values } = await processor(input);
-        const { output } = await model({ input: pixel_values });
-        const mask = await RawImage.fromTensor(output[0].mul(255).to("uint8")).resize(w, h);
-        const alpha: Uint8Array = mask.data;
+        const quality = options.quality ?? "fast";
+        let alpha: Uint8Array;
+        try {
+          options.onStatus?.(quality === "precise" ? "Aniq AI model yuklanmoqda (bir marta, ~115 MB)…" : "AI model yuklanmoqda…");
+          await loadModel(quality);
+          options.onStatus?.("Fon olib tashlanmoqda…");
+          alpha = await predictMask(quality, base.c, w, h);
+        } catch (error) {
+          if (quality === "fast") throw error;
+          console.warn("[fon] aniq model ishlamadi, MODNet ishlatiladi", error);
+          options.onStatus?.("AI model yuklanmoqda…");
+          alpha = await predictMask("fast", base.c, w, h);
+        }
 
         const pixels = base.ctx.getImageData(0, 0, w, h);
         for (let i = 0; i < w * h; i += 1) {

@@ -30,8 +30,37 @@ export async function tg<T = unknown>(
   }
 }
 
+/**
+ * Fayl bilan Telegram chaqiruvi (multipart). URL orqali rasm 5 MB bilan
+ * cheklangan, yuklab yuborishda esa 10 MB gacha mumkin.
+ */
+export async function tgUpload<T = unknown>(
+  token: string,
+  method: string,
+  params: Record<string, unknown>,
+  file: { field: string; filename: string; data: Buffer; type: string },
+): Promise<TgResponse<T>> {
+  try {
+    const form = new FormData();
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined || value === null) continue;
+      form.append(key, typeof value === "string" ? value : JSON.stringify(value));
+    }
+    form.append(file.field, new Blob([new Uint8Array(file.data)], { type: file.type }), file.filename);
+    const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+      method: "POST",
+      body: form,
+      signal: AbortSignal.timeout(30_000),
+      cache: "no-store",
+    });
+    return (await res.json()) as TgResponse<T>;
+  } catch (error) {
+    return { ok: false, description: error instanceof Error ? error.message : "network" };
+  }
+}
+
 export function escapeHtml(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 export async function getBotSettings(): Promise<BotSettings | null> {

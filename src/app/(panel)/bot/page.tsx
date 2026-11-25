@@ -63,7 +63,7 @@ export default async function BotPage() {
 
       {!settings ? (
         <p className="mt-6 rounded-[10px] bg-danger-soft px-4 py-3 text-[13px] text-danger">
-          Maʼlumotlar bazasida bot jadvallari topilmadi. <code>supabase/yoshlarwiki-admin.sql</code>{" "}
+          Maʼlumotlar bazasida bot jadvallari topilmadi. <code>supabase/migrations/20261125182400_ariza_bot_and_post_templates.sql</code>{" "}
           faylini Supabase SQL Editor’da ishga tushiring va <code>SUPABASE_SERVICE_ROLE_KEY</code> sozlanganini tekshiring.
         </p>
       ) : null}
@@ -73,8 +73,8 @@ export default async function BotPage() {
         <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard icon={Users} label="Jami nomzodlar" value={stats.total} hint={`${stats.filling} tasi toʻldirmoqda`} href="/anketalar" />
           <StatCard icon={CalendarDays} label="Bugungi nomzodlar" value={stats.today} href="/anketalar?davr=bugun" />
-          <StatCard icon={Inbox} label="Tekshiruv kutilmoqda" value={stats.submitted} href="/anketalar?holat=yuborildi" />
-          <StatCard icon={Globe} label="Saytda eʼlon qilingan" value={stats.published} hint={`${stats.approved} tasi toʻlov kutmoqda`} href="/anketalar?holat=nashr_etildi" />
+          <StatCard icon={Inbox} label="Toʻlov kutilmoqda" value={stats.submitted} href="/anketalar?holat=yuborildi" />
+          <StatCard icon={Globe} label="Saytda eʼlon qilingan" value={stats.published} href="/anketalar?holat=nashr_etildi" />
         </div>
       ) : null}
 
@@ -88,7 +88,7 @@ export default async function BotPage() {
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] font-bold text-ink">Anketalar</span>
           <span className="block text-[13px] text-ink-2">
-            Toʻldirilgan anketalar alohida boʻlimda — tekshirish, tasdiqlash va toʻlov.
+            Toʻldirilgan anketalar alohida boʻlimda — tahrirlash, toʻlov va chop etish.
           </span>
         </span>
         <ArrowRight className="size-4 text-ink-3 transition-transform group-hover:translate-x-0.5" />

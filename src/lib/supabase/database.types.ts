@@ -99,6 +99,7 @@ export type Database = {
           photo_path: string | null
           photo_url: string | null
           photo_white_url: string | null
+          post_image_url: string | null
           post_url: string | null
           profile_url: string | null
           published_at: string | null
@@ -129,6 +130,7 @@ export type Database = {
           photo_path?: string | null
           photo_url?: string | null
           photo_white_url?: string | null
+          post_image_url?: string | null
           post_url?: string | null
           profile_url?: string | null
           published_at?: string | null
@@ -159,6 +161,7 @@ export type Database = {
           photo_path?: string | null
           photo_url?: string | null
           photo_white_url?: string | null
+          post_image_url?: string | null
           post_url?: string | null
           profile_url?: string | null
           published_at?: string | null
@@ -336,6 +339,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ariza_bot_admins: {
+        Row: {
+          chat_id: number | null
+          created_at: string
+          created_by: string | null
+          full_name: string
+          id: string
+          is_active: boolean
+          last_seen_at: string | null
+          state: Json
+          telegram_id: number
+          telegram_username: string | null
+        }
+        Insert: {
+          chat_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          state?: Json
+          telegram_id: number
+          telegram_username?: string | null
+        }
+        Update: {
+          chat_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          state?: Json
+          telegram_id?: number
+          telegram_username?: string | null
+        }
+        Relationships: []
+      }
+      ariza_bot_settings: {
+        Row: {
+          bot_token: string | null
+          bot_username: string | null
+          connected_at: string | null
+          id: number
+          updated_at: string
+          updated_by: string | null
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          bot_token?: string | null
+          bot_username?: string | null
+          connected_at?: string | null
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          bot_token?: string | null
+          bot_username?: string | null
+          connected_at?: string | null
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
       }
       bot_admins: {
         Row: {

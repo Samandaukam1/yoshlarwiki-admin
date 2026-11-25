@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
       : [],
   },
   poweredByHeader: false,
+  // Telegram post shabloni va shriftlar server funksiyalariga qo'shilsin (src/lib/post-image.tsx).
+  outputFileTracingIncludes: {
+    "/**": ["./src/assets/post/**/*"],
+  },
   async headers() {
     return [
       {

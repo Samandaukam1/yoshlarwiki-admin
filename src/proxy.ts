@@ -3,8 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/config";
 
-// /anketa — nomzodlar bir martalik havola orqali kiradi; /api/telegram — bot webhook'i.
-const PUBLIC_PATHS = ["/login", "/auth", "/anketa", "/api/telegram"];
+// /anketa — nomzodlar bir martalik havola orqali kiradi; /api/telegram, /api/ariza-bot — bot webhook'lari.
+const PUBLIC_PATHS = ["/login", "/auth", "/anketa", "/api/telegram", "/api/ariza-bot"];
 
 /**
  * Har bir so'rovda Supabase sessiyasini yangilaydi va admin sahifalarini

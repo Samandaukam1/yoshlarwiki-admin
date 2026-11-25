@@ -1,10 +1,9 @@
 "use client";
 
-import { Banknote, CircleCheck, Globe, Loader2, Megaphone, Send, XCircle } from "lucide-react";
+import { Banknote, Globe, Loader2, Megaphone, Send, XCircle } from "lucide-react";
 import { useActionState } from "react";
 
 import {
-  approveAnketa,
   markPaidManually,
   publishAnketa,
   rejectAnketa,
@@ -18,9 +17,8 @@ import { btn, type ButtonVariant } from "@/components/ui";
 type Action = (prev: BotResult, fd: FormData) => Promise<BotResult>;
 
 const ACTIONS = {
-  approve: { fn: approveAnketa, label: "Tasdiqlash", icon: CircleCheck, variant: "primary" },
   payment: { fn: requestPayment, label: "Tekshirish", icon: Send, variant: "primary" },
-  manual: { fn: markPaidManually, label: "Qoʻlda: toʻlov qilingan", icon: Banknote, variant: "ghost" },
+  manual: { fn: markPaidManually, label: "Qoʻlda: toʻlov qilingan → chop etish", icon: Banknote, variant: "ghost" },
   publish: { fn: publishAnketa, label: "Saytda chiqarish", icon: Globe, variant: "primary" },
   repost: { fn: repostToChannel, label: "Kanalga qayta yuborish", icon: Megaphone, variant: "secondary" },
   reject: { fn: rejectAnketa, label: "Rad etish", icon: XCircle, variant: "danger" },

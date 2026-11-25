@@ -2,7 +2,9 @@ import "server-only";
 
 import { sanitizeAnswers } from "./anketa";
 import type { Anketa } from "./anketa-server";
-import { escapeHtml, getBotSettings, tg } from "./telegram";
+import { renderPostImage } from "./post-image";
+import { createAdminClient } from "./supabase/admin";
+import { escapeHtml, getBotSettings, tg, tgUpload } from "./telegram";
 
 /** Kanal havolasini chat_id ko'rinishiga keltiradi: t.me/abc → @abc, -100… o'zgarmaydi. */
 export function normalizeChannel(raw: string): string {
@@ -215,32 +217,94 @@ async function writeOfficialIntro(anketa: Anketa): Promise<string | null> {
   }
 }
 
+/** Post havolasidan chat va xabar raqami: t.me/kanal/12 → @kanal, 12; t.me/c/123/12 → -100123, 12. */
+function parsePostUrl(url: string | null): { chat: string; messageId: number } | null {
+  if (!url) return null;
+  const priv = /t\.me\/c\/(\d+)\/(\d+)/.exec(url);
+  if (priv) return { chat: `-100${priv[1]}`, messageId: Number(priv[2]) };
+  const pub = /t\.me\/([A-Za-z][A-Za-z0-9_]{3,})\/(\d+)/.exec(url);
+  if (pub) return { chat: `@${pub[1]}`, messageId: Number(pub[2]) };
+  return null;
+}
+
+const BUCKET = "portraits";
+
+/** Shablonli post rasmini yasab Storage'ga saqlaydi. Xato bo'lsa — null. */
+async function preparePostImage(anketa: Anketa): Promise<{ data: Buffer; url: string } | null> {
+  try {
+    const data = await renderPostImage(anketa);
+    const db = createAdminClient();
+    const path = `anketa/${anketa.id}/post-${Date.now().toString(36)}.png`;
+    const { error } = await db.storage.from(BUCKET).upload(path, data, { contentType: "image/png", upsert: true });
+    if (error) throw error;
+
+    // Eski post rasmini o'chiramiz.
+    const marker = `/object/public/${BUCKET}/`;
+    const old = anketa.post_image_url?.split(marker)[1];
+    if (old && old !== path) await db.storage.from(BUCKET).remove([decodeURIComponent(old)]);
+
+    return { data, url: db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl };
+  } catch (error) {
+    console.error("[post] shablon rasmi yaratilmadi", error);
+    return null;
+  }
+}
+
+export type PostResult = { ok: true; url: string; imageUrl: string | null } | { ok: false; message: string };
+
+/**
+ * Kanalga post: shablon rasmi + rasmiy matn.
+ * `update: true` bo'lsa — mavjud post (rasm va matn) tahrirlanadi, havola o'zgarmaydi.
+ * Tahrirlab bo'lmasa (post o'chirilgan / kanal almashgan) — yangi post yuboriladi.
+ */
 export async function postToChannel(
   anketa: Anketa,
   profileUrl: string,
-): Promise<{ ok: true; url: string } | { ok: false; message: string }> {
+  options: { update?: boolean } = {},
+): Promise<PostResult> {
   const settings = await getBotSettings();
   if (!settings?.bot_token || !settings.connected_at) return { ok: false, message: "Bot ulanmagan." };
   const channel = settings.channel ? normalizeChannel(settings.channel) : "";
   if (!channel) return { ok: false, message: "Telegram kanal kiritilmagan." };
 
-  const photo = anketa.photo_white_url || anketa.photo_url;
-  if (!photo) return { ok: false, message: "Rasm yoʻq." };
+  const image = await preparePostImage(anketa);
+  const fallbackPhoto = anketa.photo_white_url || anketa.photo_url;
+  if (!image && !fallbackPhoto) return { ok: false, message: "Rasm yoʻq." };
 
-  const res = await tg<{ message_id: number; chat: { username?: string } }>(settings.bot_token, "sendPhoto", {
-    chat_id: channel,
-    photo,
-    caption: buildCaption(
-      anketa,
-      profileUrl,
-      { instagram: settings.instagram_url, telegram: settings.telegram_url, apply: settings.apply_url },
-      await writeOfficialIntro(anketa),
-    ),
-    parse_mode: "HTML",
-  });
+  const caption = buildCaption(
+    anketa,
+    profileUrl,
+    { instagram: settings.instagram_url, telegram: settings.telegram_url, apply: settings.apply_url },
+    await writeOfficialIntro(anketa),
+  );
+  const token = settings.bot_token;
+  const file = image ? { field: "photo", filename: "post.png", data: image.data, type: "image/png" } : null;
+
+  /* Mavjud postni tahrirlash */
+  const existing = options.update ? parsePostUrl(anketa.post_url) : null;
+  if (existing && existing.chat.toLowerCase() === channel.toLowerCase()) {
+    const media = { type: "photo", media: file ? "attach://photo" : fallbackPhoto, caption, parse_mode: "HTML" };
+    const params = { chat_id: existing.chat, message_id: existing.messageId, media };
+    const edited = file ? await tgUpload(token, "editMessageMedia", params, file) : await tg(token, "editMessageMedia", params);
+    if (edited.ok || /not modified/i.test(edited.description ?? "")) {
+      return { ok: true, url: anketa.post_url!, imageUrl: image?.url ?? anketa.post_image_url };
+    }
+    console.warn("[post] tahrirlanmadi, yangi post yuboriladi:", edited.description);
+  }
+
+  /* Yangi post */
+  type Sent = { message_id: number; chat: { username?: string } };
+  const params = { chat_id: channel, caption, parse_mode: "HTML" };
+  const res = file
+    ? await tgUpload<Sent>(token, "sendPhoto", params, file)
+    : await tg<Sent>(token, "sendPhoto", { ...params, photo: fallbackPhoto });
 
   if (!res.ok || !res.result) {
     return { ok: false, message: `Kanalga yuborilmadi: ${res.description ?? "xato"} (bot kanalga admin qilinganmi?)` };
   }
-  return { ok: true, url: postLink(channel, res.result.message_id, res.result.chat?.username) };
+  return {
+    ok: true,
+    url: postLink(channel, res.result.message_id, res.result.chat?.username),
+    imageUrl: image?.url ?? null,
+  };
 }

@@ -365,8 +365,10 @@ export function CandidateEditForm({
       {/* Profil rangi */}
       <Card>
         <CardTitle>Profil rangi</CardTitle>
-        <p className="-mt-2 mb-4 text-[13px] text-ink-2">Saytdagi profil sahifasi shu rangda koʻrinadi.</p>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <p className="-mt-2 mb-4 text-[13px] text-ink-2">
+          Faqat saytdagi profil sahifasining orqa foni oʻzgaradi — matnlar, tugmalar va kartochkalar oʻz rangida qoladi.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {THEME_COLORS.map((color) => (
             <label
               key={color.value}
@@ -377,11 +379,11 @@ export function CandidateEditForm({
                 name="theme_color"
                 value={color.value}
                 disabled={disabled}
-                defaultChecked={(candidate.theme_color ?? "blue") === color.value}
+                defaultChecked={(candidate.theme_color ?? "standard") === color.value}
                 className="peer sr-only"
               />
               <span
-                className="size-9 shrink-0 rounded-full ring-2 ring-surface ring-offset-2 ring-offset-line"
+                className="size-9 shrink-0 rounded-full border border-line-strong"
                 style={{ background: color.swatch }}
               />
               <span className="text-[14px] font-semibold text-ink">{color.label}</span>

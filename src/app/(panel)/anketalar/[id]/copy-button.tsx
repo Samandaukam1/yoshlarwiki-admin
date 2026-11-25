@@ -5,7 +5,18 @@ import { useState } from "react";
 
 import { btn } from "@/components/ui";
 
-export function CopyButton({ text, label = "Nusxalash", full = false }: { text: string; label?: string; full?: boolean }) {
+export function CopyButton({
+  text,
+  html,
+  label = "Nusxalash",
+  full = false,
+}: {
+  text: string;
+  /** Boy matn: Telegram'ga qo'yilganda havolalar yozuv ichida qoladi. */
+  html?: string;
+  label?: string;
+  full?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
 
   return (
@@ -13,9 +24,22 @@ export function CopyButton({ text, label = "Nusxalash", full = false }: { text: 
       type="button"
       onClick={async () => {
         try {
-          await navigator.clipboard.writeText(text);
+          if (html && typeof ClipboardItem !== "undefined") {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                "text/html": new Blob([html], { type: "text/html" }),
+                "text/plain": new Blob([text], { type: "text/plain" }),
+              }),
+            ]);
+          } else {
+            await navigator.clipboard.writeText(text);
+          }
         } catch {
-          return;
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            return;
+          }
         }
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);

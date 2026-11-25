@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Award,
   Bot,
+  BotMessageSquare,
   ClipboardList,
   ExternalLink,
   FolderTree,
@@ -32,6 +33,7 @@ const NAV = [
   { href: "/nomzodlar", label: "Nomzodlar", icon: Users },
   { href: "/anketalar", label: "Anketalar", icon: ClipboardList },
   { href: "/bot", label: "Telegram bot", icon: Bot },
+  { href: "/ariza-bot", label: "Ariza boshqaruv bot", icon: BotMessageSquare },
   { href: "/sertifikatlar", label: "Sertifikatlar", icon: Award },
   { href: "/kategoriyalar", label: "Kategoriyalar", icon: FolderTree },
   { href: "/media", label: "Media", icon: ImageIcon },

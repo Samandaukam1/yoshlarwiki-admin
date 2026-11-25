@@ -1,10 +1,13 @@
-import type { NextRequest } from "next/server";
+import { after, type NextRequest } from "next/server";
 
 import { createAnketaWithLink, formatTashkent, getAnketaStats } from "@/lib/anketa-server";
+import { publishAnketaById } from "@/lib/anketa-publish";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { escapeHtml, getBotSettings, tg, type BotAdmin } from "@/lib/telegram";
 
 export const dynamic = "force-dynamic";
+// «Ha» bosilganda post rasmi va kanalga yuborish uchun vaqt.
+export const maxDuration = 60;
 
 /* ------------------------------------------------------------------ */
 /* Telegram turlari (faqat kerakli maydonlar)                         */
@@ -253,37 +256,61 @@ async function handleCallback(token: string, admin: BotAdmin, cb: TgCallback, ch
     return;
   }
 
-  /* To'lovni tasdiqlash: pay:ok:<id> | pay:no:<id> */
+  /* To'lovni tasdiqlash: pay:ok:<id> | pay:no:<id>. «Ha» → avtomatik chop etiladi. */
   const pay = /^pay:(ok|no):([0-9a-f-]{36})$/.exec(data);
   if (pay) {
     const [, verdict, id] = pay;
     const db = createAdminClient();
-    const { data: anketa } = await db.from("anketalar").select("id, full_name, status").eq("id", id).maybeSingle();
+    const { data: anketa } = await db
+      .from("anketalar")
+      .select("id, full_name, status, payment_status")
+      .eq("id", id)
+      .maybeSingle();
 
     if (!anketa) {
       await answer("Anketa topilmadi");
       return;
     }
 
-    const paid = verdict === "ok";
-    await db
-      .from("anketalar")
-      .update({
-        payment_status: paid ? "tolandi" : "tolanmadi",
-        payment_confirmed_at: new Date().toISOString(),
-        payment_confirmed_by: admin.full_name,
-      })
-      .eq("id", id);
+    const editStatus = (line: string) =>
+      cb.message
+        ? tg(token, "editMessageText", {
+            chat_id: chatId,
+            message_id: cb.message.message_id,
+            parse_mode: "HTML",
+            text: `💳 <b>${escapeHtml(anketa.full_name)}</b> — ${line}`,
+          })
+        : Promise.resolve();
 
-    await answer(paid ? "✅ Belgilandi: toʻlov qilingan" : "Belgilandi: toʻlanmagan");
-    if (cb.message) {
-      await tg(token, "editMessageText", {
-        chat_id: chatId,
-        message_id: cb.message.message_id,
-        parse_mode: "HTML",
-        text: `💳 <b>${escapeHtml(anketa.full_name)}</b> — ${paid ? "✅ toʻlov qilingan" : "❌ toʻlanmagan"}`,
-      });
+    if (anketa.status === "nashr_etildi") {
+      await answer("Profil allaqachon saytda");
+      await editStatus("✅ profil saytda");
+      return;
     }
+
+    if (verdict === "no") {
+      await db
+        .from("anketalar")
+        .update({
+          payment_status: "tolanmadi",
+          payment_confirmed_at: new Date().toISOString(),
+          payment_confirmed_by: admin.full_name,
+        })
+        .eq("id", id)
+        .neq("payment_status", "tolandi");
+      await answer("Belgilandi: toʻlanmagan");
+      await editStatus("❌ toʻlanmagan. Keyinroq admin paneldan oʻzgartirish mumkin.");
+      return;
+    }
+
+    await answer("✅ Toʻlov qilingan — profil chop etilmoqda…");
+    await editStatus("✅ toʻlov qilingan, profil chop etilmoqda…");
+
+    // Chop etish (rasm, kanalga post) biroz vaqt oladi — Telegramga javob qaytgach bajariladi.
+    after(async () => {
+      const res = await publishAnketaById(id, { confirmedBy: admin.full_name, claimPayment: true });
+      await editStatus(res.ok ? "✅ toʻlov qilingan, profil chop etildi" : `⚠️ ${escapeHtml(res.message)}`);
+    });
     return;
   }
 

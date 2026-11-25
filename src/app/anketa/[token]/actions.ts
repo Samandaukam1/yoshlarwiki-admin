@@ -2,6 +2,7 @@
 
 import { normalizePhone, normalizeUsername, sanitizeAnswers, STEPS } from "@/lib/anketa";
 import { polishAnketa } from "@/lib/anketa-polish";
+import { askPayment } from "@/lib/anketa-publish";
 import { loadActiveLink } from "@/lib/anketa-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -136,6 +137,13 @@ export async function submitAnketa(token: string, raw: unknown): Promise<Ok> {
 
   // Havola bir martalik: Supabase'dan butunlay o'chiriladi.
   await db.from("anketa_links").delete().eq("anketa_id", anketa.id);
+
+  // Havolani yaratgan adminga botda: «… anketani to'ldirdi. To'lov qildimi? ✅ Ha / ❌ Yo'q».
+  try {
+    await askPayment(anketa.id);
+  } catch (error) {
+    console.error("[anketa] botga xabar yuborilmadi", error);
+  }
 
   return { ok: true };
 }

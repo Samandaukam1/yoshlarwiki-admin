@@ -15,8 +15,8 @@ export const dynamic = "force-dynamic";
 
 const FILTERS: { value: string; label: string }[] = [
   { value: "", label: "Toʻldirilganlar" },
-  { value: "yuborildi", label: "Tekshiruv kutilmoqda" },
-  { value: "tasdiqlandi", label: "Tasdiqlangan" },
+  { value: "yuborildi", label: "Toʻlov kutilmoqda" },
+  { value: "tasdiqlandi", label: "Chop etilmoqda" },
   { value: "nashr_etildi", label: "Saytda" },
   { value: "rad_etildi", label: "Rad etilgan" },
   { value: "toldirilmoqda", label: "Toʻldirilmoqda" },

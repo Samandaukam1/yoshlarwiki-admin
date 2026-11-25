@@ -4,11 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { canWrite, requireAdmin } from "@/lib/auth";
-import { sanitizeAnswers } from "@/lib/anketa";
-import { createCandidateFromAnketa, profileUrlFor } from "@/lib/anketa-server";
+import { normalizePhone, normalizeUsername, sanitizeAnswers } from "@/lib/anketa";
+import { askPayment, publishAnketaById, syncAnketaAfterEdit } from "@/lib/anketa-publish";
 import { postToChannel } from "@/lib/channel-post";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { escapeHtml, notifyBotAdmins } from "@/lib/telegram";
 import type { BotResult } from "../bot/types";
 
 async function load(fd: FormData) {
@@ -26,139 +25,41 @@ function refresh(id: string) {
   revalidatePath("/bot");
 }
 
-/* 1. Tasdiqlash → profil (qoralama) yaratiladi */
-export async function approveAnketa(_prev: BotResult, fd: FormData): Promise<BotResult> {
-  const { admin, anketa, error } = await load(fd);
-  if (!anketa) return { status: "error", message: error ?? "Xatolik." };
-  if (anketa.status !== "yuborildi") return { status: "error", message: "Faqat yuborilgan anketani tasdiqlash mumkin." };
+const EDITABLE = new Set(["yuborildi", "tasdiqlandi", "nashr_etildi"]);
 
-  const res = await createCandidateFromAnketa(anketa, admin.id);
-  if (!res.ok) return { status: "error", message: res.message };
-
-  refresh(anketa.id);
-  return { status: "success", message: "Tasdiqlandi — nomzod profili (qoralama) yaratildi." };
-}
-
-/* 2. To'lovni tekshirish — havolani yaratgan Telegram adminga boradi */
+/* «To'lov qildimi?» xabarini botga qayta yuborish */
 export async function requestPayment(_prev: BotResult, fd: FormData): Promise<BotResult> {
   const { anketa, error } = await load(fd);
   if (!anketa) return { status: "error", message: error ?? "Xatolik." };
-  if (anketa.status !== "tasdiqlandi") return { status: "error", message: "Avval anketani tasdiqlang." };
-
-  if (!anketa.created_by_bot_admin) {
-    return { status: "error", message: "Bu anketa havolasini yaratgan Telegram admin topilmadi." };
+  if (anketa.status !== "yuborildi" && anketa.status !== "tasdiqlandi") {
+    return { status: "error", message: "Anketa hali yuborilmagan yoki allaqachon chop etilgan." };
   }
-
-  const a = sanitizeAnswers(anketa.answers_fixed ?? anketa.answers);
-  const tgUser = a.telegram.replace(/^@/, "");
-
-  const text = [
-    "💳 <b>Toʻlovni tekshiring</b>",
-    `👤 ${escapeHtml(a.full_name || anketa.full_name)}`,
-    tgUser ? `✈️ @${escapeHtml(tgUser)}` : null,
-    a.phone ? `📞 ${escapeHtml(a.phone)}` : null,
-    "",
-    "Toʻlov qilinganmi?",
-  ]
-    .filter((line) => line !== null)
-    .join("\n");
-
-  const keyboard: { text: string; url?: string; callback_data?: string }[][] = [
-    [
-      { text: "✅ Ha", callback_data: `pay:ok:${anketa.id}` },
-      { text: "❌ Yoʻq", callback_data: `pay:no:${anketa.id}` },
-    ],
-  ];
-  if (tgUser) keyboard.unshift([{ text: `💬 @${tgUser} bilan chat`, url: `https://t.me/${tgUser}` }]);
-
-  // FAQAT havolani yaratgan Telegram adminga.
-  const sent = await notifyBotAdmins(text, {
-    preferId: anketa.created_by_bot_admin,
-    onlyPreferred: true,
-    replyMarkup: { inline_keyboard: keyboard },
-  });
-
-  if (!sent) {
-    return {
-      status: "error",
-      message: "Yuborilmadi: havolani yaratgan admin faol emas yoki bot ulanmagan.",
-    };
-  }
-
-  await createAdminClient()
-    .from("anketalar")
-    .update({ payment_status: "kutilmoqda", payment_requested_at: new Date().toISOString() })
-    .eq("id", anketa.id);
-
+  const res = await askPayment(anketa);
   refresh(anketa.id);
-  return { status: "success", message: "Botga yuborildi. Admin «Ha» ni bossa, toʻlov avtomatik belgilanadi." };
+  return { status: res.ok ? "success" : "error", message: res.ok ? `${res.message} Admin «Ha» ni bossa, profil avtomatik chop etiladi.` : res.message };
 }
 
-/* Qo'lda belgilash (bot ishlamasa) */
+/* Qo'lda: to'lov qilingan → avtomatik chop etiladi */
 export async function markPaidManually(_prev: BotResult, fd: FormData): Promise<BotResult> {
   const { admin, anketa, error } = await load(fd);
   if (!anketa) return { status: "error", message: error ?? "Xatolik." };
-  await createAdminClient()
-    .from("anketalar")
-    .update({
-      payment_status: "tolandi",
-      payment_confirmed_at: new Date().toISOString(),
-      payment_confirmed_by: admin.full_name || admin.email,
-    })
-    .eq("id", anketa.id);
+  const res = await publishAnketaById(anketa.id, {
+    claimPayment: true,
+    confirmedBy: admin.full_name || admin.email,
+  });
   refresh(anketa.id);
-  return { status: "success", message: "Toʻlov qilingan deb belgilandi." };
+  revalidatePath("/nomzodlar");
+  return { status: res.ok ? "success" : "error", message: res.message };
 }
 
-/* 3. Saytda chiqarish → kanalga post → yaratgan adminga xabar */
+/* Saytda chiqarish (to'lov tasdiqlangan, lekin chop etish oxiriga yetmagan bo'lsa) */
 export async function publishAnketa(_prev: BotResult, fd: FormData): Promise<BotResult> {
   const { anketa, error } = await load(fd);
   if (!anketa) return { status: "error", message: error ?? "Xatolik." };
-  if (!anketa.candidate_id) return { status: "error", message: "Profil hali yaratilmagan." };
-  if (anketa.payment_status !== "tolandi") return { status: "error", message: "Toʻlov tasdiqlanmagan." };
-
-  const db = createAdminClient();
-  const now = new Date().toISOString();
-  const { data: candidate, error: pubError } = await db
-    .from("candidates")
-    .update({ status: "published", published_at: now })
-    .eq("id", anketa.candidate_id)
-    .select("slug")
-    .single();
-  if (pubError || !candidate) return { status: "error", message: "Profilni nashr qilib boʻlmadi." };
-
-  const profileUrl = profileUrlFor(candidate.slug);
-  const post = await postToChannel(anketa, profileUrl);
-
-  await db
-    .from("anketalar")
-    .update({
-      status: "nashr_etildi",
-      published_at: now,
-      profile_url: profileUrl,
-      post_url: post.ok ? post.url : null,
-    })
-    .eq("id", anketa.id);
-
-  const a = sanitizeAnswers(anketa.answers_fixed ?? anketa.answers);
-  await notifyBotAdmins(
-    [
-      "✅ <b>Profil tayyor</b>",
-      `👤 ${escapeHtml(a.full_name || anketa.full_name)}`,
-      a.telegram ? `✈️ ${escapeHtml(a.telegram)}` : null,
-      `🔗 ${escapeHtml(profileUrl)}`,
-      post.ok ? `📢 Telegram post yuborildi: ${escapeHtml(post.url)}` : `📢 Post yuborilmadi`,
-    ]
-      .filter((line) => line !== null)
-      .join("\n"),
-    { preferId: anketa.created_by_bot_admin, onlyPreferred: true },
-  );
-
+  const res = await publishAnketaById(anketa.id);
   refresh(anketa.id);
   revalidatePath("/nomzodlar");
-  return post.ok
-    ? { status: "success", message: "Profil saytda, Telegram post yuborildi." }
-    : { status: "error", message: `Profil saytda. ${post.message}` };
+  return { status: res.ok ? "success" : "error", message: res.message };
 }
 
 /* Kanalga qayta yuborish (post chiqmagan bo'lsa) */
@@ -168,11 +69,136 @@ export async function repostToChannel(_prev: BotResult, fd: FormData): Promise<B
   if (anketa.status !== "nashr_etildi" || !anketa.profile_url) {
     return { status: "error", message: "Avval profilni saytda chiqaring." };
   }
-  const post = await postToChannel(anketa, anketa.profile_url);
+  const post = await postToChannel(anketa, anketa.profile_url, { update: true });
   if (!post.ok) return { status: "error", message: post.message };
-  await createAdminClient().from("anketalar").update({ post_url: post.url }).eq("id", anketa.id);
+  await createAdminClient()
+    .from("anketalar")
+    .update({ post_url: post.url, post_image_url: post.imageUrl })
+    .eq("id", anketa.id);
   refresh(anketa.id);
   return { status: "success", message: "Telegram post yuborildi." };
+}
+
+/* ------------------------------------------------------------------ */
+/* Tahrirlash: matnlar                                                */
+/* ------------------------------------------------------------------ */
+
+export async function saveAnketaEdits(_prev: BotResult, fd: FormData): Promise<BotResult> {
+  const { anketa, error } = await load(fd);
+  if (!anketa) return { status: "error", message: error ?? "Xatolik." };
+  if (!EDITABLE.has(anketa.status)) {
+    return { status: "error", message: "Bu holatdagi anketani tahrirlab boʻlmaydi." };
+  }
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(String(fd.get("answers") ?? "{}"));
+  } catch {
+    return { status: "error", message: "Maʼlumotlar notoʻgʻri." };
+  }
+
+  const previous = sanitizeAnswers(anketa.answers_fixed ?? anketa.answers);
+  const answers = sanitizeAnswers(raw);
+  answers.skipped = previous.skipped.filter((key) => {
+    // To'ldirilgan bo'lim endi "ma'lumot yo'q" emas.
+    if (key === "achievements") return !answers.achievements.some((x) => x.title.trim());
+    if (key === "experience") return !answers.experience.some((x) => x.title.trim());
+    if (key === "projects") return !answers.projects.some((x) => x.title.trim());
+    if (key === "study") return !answers.study_place.trim();
+    if (key === "activity") return !answers.activity.trim();
+    if (key === "about") return !answers.about.trim();
+    if (key === "birth") return !answers.birth_date && !answers.birth_place.trim();
+    if (key === "extra") return !answers.extra.trim();
+    return true;
+  });
+  answers.full_name = answers.full_name.replace(/\s+/g, " ").trim();
+  answers.instagram = normalizeUsername(answers.instagram);
+  answers.telegram = normalizeUsername(answers.telegram);
+  answers.phone = normalizePhone(answers.phone) || answers.phone.trim();
+  // Bo'sh qatorlarni tashlaymiz.
+  answers.experience = answers.experience.filter((x) => x.title.trim());
+  answers.achievements = answers.achievements.filter((x) => x.title.trim());
+  answers.projects = answers.projects.filter((x) => x.title.trim());
+  answers.socials = answers.socials.filter((x) => x.url.trim());
+
+  if (answers.full_name.length < 3) return { status: "error", message: "F.I.Sh ni toʻliq yozing." };
+
+  const { error: saveError } = await createAdminClient()
+    .from("anketalar")
+    .update({ answers_fixed: answers, full_name: answers.full_name })
+    .eq("id", anketa.id);
+  if (saveError) return { status: "error", message: "Saqlanmadi." };
+
+  const res = await syncAnketaAfterEdit(anketa.id);
+  refresh(anketa.id);
+  revalidatePath("/nomzodlar");
+  return { status: res.ok ? "success" : "error", message: res.ok ? res.message : res.message };
+}
+
+/* ------------------------------------------------------------------ */
+/* Tahrirlash: rasmni almashtirish (foni brauzerda kesiladi)          */
+/* ------------------------------------------------------------------ */
+
+const PHOTO_EXT: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
+
+export async function createAnketaPhotoUpload(
+  id: string,
+  mime: string,
+  size: number,
+  variant: "portrait" | "white",
+): Promise<{ ok: true; path: string; uploadToken: string } | { ok: false; message: string }> {
+  const fd = new FormData();
+  fd.set("id", id);
+  const { anketa, error } = await load(fd);
+  if (!anketa) return { ok: false, message: error ?? "Xatolik." };
+  if (!EDITABLE.has(anketa.status)) return { ok: false, message: "Bu holatdagi anketani tahrirlab boʻlmaydi." };
+
+  const ext = PHOTO_EXT[mime];
+  if (!ext) return { ok: false, message: "Faqat PNG, JPG yoki WebP rasm yuklang." };
+  if (size > 15 * 1024 * 1024) return { ok: false, message: "Rasm hajmi 15 MB dan oshmasin." };
+
+  const path = `anketa/${anketa.id}/${Date.now().toString(36)}-${variant === "white" ? "oq" : "portret"}.${ext}`;
+  const { data, error: upError } = await createAdminClient().storage.from("portraits").createSignedUploadUrl(path);
+  if (upError || !data) return { ok: false, message: "Yuklashni boshlab boʻlmadi." };
+  return { ok: true, path: data.path, uploadToken: data.token };
+}
+
+export async function confirmAnketaPhoto(
+  id: string,
+  path: string,
+  whitePath: string | null,
+): Promise<{ ok: boolean; message: string }> {
+  const fd = new FormData();
+  fd.set("id", id);
+  const { anketa, error } = await load(fd);
+  if (!anketa) return { ok: false, message: error ?? "Xatolik." };
+  const prefix = `anketa/${anketa.id}/`;
+  if (!path.startsWith(prefix) || (whitePath && !whitePath.startsWith(prefix))) {
+    return { ok: false, message: "Notoʻgʻri fayl." };
+  }
+
+  const db = createAdminClient();
+  const storage = db.storage.from("portraits");
+  const publicUrl = storage.getPublicUrl(path).data.publicUrl;
+  const whiteUrl = whitePath ? storage.getPublicUrl(whitePath).data.publicUrl : null;
+
+  await db
+    .from("anketalar")
+    .update({ photo_url: publicUrl, photo_path: path, photo_white_url: whiteUrl })
+    .eq("id", anketa.id);
+
+  const res = await syncAnketaAfterEdit(anketa.id);
+
+  // Eski rasmlarni o'chiramiz (profil endi yangisini ko'rsatadi).
+  const marker = "/object/public/portraits/";
+  const old = [anketa.photo_path, anketa.photo_white_url?.split(marker)[1]]
+    .filter((x): x is string => !!x && x !== path && x !== whitePath)
+    .map((x) => decodeURIComponent(x));
+  if (old.length) await storage.remove(old);
+
+  refresh(anketa.id);
+  revalidatePath("/nomzodlar");
+  return { ok: res.ok, message: res.ok ? `Rasm almashtirildi. ${res.message}` : res.message };
 }
 
 /* Rad etish */
