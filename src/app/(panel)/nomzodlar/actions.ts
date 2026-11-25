@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { canWrite, requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CANDIDATE_STATUSES, slugify, THEME_COLORS, type CandidateStatus } from "@/lib/constants";
+import { CANDIDATE_STATUSES, slugify, type CandidateStatus } from "@/lib/constants";
 import type { CmsResult } from "./types";
 
 /* ------------------------------------------------------------------ */
@@ -112,9 +112,6 @@ export async function saveCandidate(
   const requestedSlug = text(formData, "slug") || fullName;
   const slug = await uniqueSlug(supabase, requestedSlug, id);
 
-  const themeRaw = text(formData, "theme_color");
-  const themeColor = THEME_COLORS.some((c) => c.value === themeRaw) ? themeRaw : undefined;
-
   const keywords = text(formData, "keywords")
     .split(",")
     .map((word) => word.trim())
@@ -150,7 +147,6 @@ export async function saveCandidate(
       canonical_url: nullable(formData, "canonical_url"),
       keywords,
       no_index: formData.get("no_index") === "on",
-      ...(themeColor ? { theme_color: themeColor } : {}),
     })
     .eq("id", id);
 

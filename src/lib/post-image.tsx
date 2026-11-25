@@ -4,27 +4,24 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
-import { sanitizeAnswers } from "./anketa";
+import { sanitizeAnswers, type AnketaAnswers } from "./anketa";
 import type { Anketa } from "./anketa-server";
-import { achievementLine, educationLine, fitText, type FittedText } from "./post-text";
+import { preparePortrait } from "./portrait-crop";
+import { fitText, postSentences, wrapText, type FittedText } from "./post-text";
 
 /* ------------------------------------------------------------------ */
 /* Shablon o'lchamlari (src/assets/post/template.jpg — 1254×1254)     */
+/*  - chap tepada logo, chap pastda shahar manzarasi (≈ y 830 dan)    */
+/*  - o'ng tomon bo'sh — nomzod rasmi                                 */
 /* ------------------------------------------------------------------ */
 
 const SIZE = 1254;
 
-/** Qutilar ichidagi matn joyi: ajratuvchi chiziqdan o'ngda. */
-const TEXT_LEFT = 228;
-const TEXT_WIDTH = 400;
-const BOXES = {
-  name: { top: 407, height: 160 },
-  study: { top: 609, height: 166 },
-  achievement: { top: 813, height: 166 },
-};
+/** Chap ustun: F.I.Sh + qisqa matn. Pastki cheti shahar rasmining biroz tepasida. */
+const TEXT = { left: 74, width: 470, bottom: 800, top: 190 };
 
-/** Nomzod rasmi: o'ng tomondagi bo'sh joy, pastga tekislangan. */
-const PORTRAIT = { centerX: 955, maxWidth: 600, maxHeight: 940, bottom: SIZE };
+/** Nomzod rasmi: o'ng tomonda, pastga tekislangan (bel — rasm pastki chetida). */
+const PORTRAIT = { centerX: 905, maxWidth: 700, maxHeight: 1090, minLeft: 548 };
 
 /* ------------------------------------------------------------------ */
 /* Fayllar (bir marta o'qiladi)                                       */
@@ -32,27 +29,20 @@ const PORTRAIT = { centerX: 955, maxWidth: 600, maxHeight: 940, bottom: SIZE };
 
 const ASSETS = join(process.cwd(), "src/assets/post");
 
-let assets: Promise<{
-  full: string;
-  noAchievement: string;
-  bold: ArrayBuffer;
-  semibold: ArrayBuffer;
-}> | null = null;
+let assets: Promise<{ template: string; bold: ArrayBuffer; semibold: ArrayBuffer }> | null = null;
 
 const toArrayBuffer = (b: Buffer) => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer;
 
 function loadAssets() {
   if (!assets) {
     assets = (async () => {
-      const [full, noAchievement, bold, semibold] = await Promise.all([
+      const [template, bold, semibold] = await Promise.all([
         readFile(join(ASSETS, "template.jpg")),
-        readFile(join(ASSETS, "template-2.jpg")),
         readFile(join(ASSETS, "Inter-Bold.otf")),
         readFile(join(ASSETS, "Inter-SemiBold.otf")),
       ]);
       return {
-        full: `data:image/jpeg;base64,${full.toString("base64")}`,
-        noAchievement: `data:image/jpeg;base64,${noAchievement.toString("base64")}`,
+        template: `data:image/jpeg;base64,${template.toString("base64")}`,
         bold: toArrayBuffer(bold),
         semibold: toArrayBuffer(semibold),
       };
@@ -107,10 +97,20 @@ function imageInfo(buf: Buffer): { mime: string; width: number; height: number }
   return null;
 }
 
+/**
+ * Nomzod rasmi: fonsiz PNG bo'lsa — beligacha kesiladi va chetlari tozalanadi.
+ * Eski profillar ham shu yerdan o'tadi — qayta yuklash shart emas.
+ */
 async function loadPortrait(url: string) {
   const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
   if (!res.ok) throw new Error(`Rasm yuklanmadi (${res.status})`);
   const buf = Buffer.from(await res.arrayBuffer());
+
+  const prepared = preparePortrait(buf);
+  if (prepared) {
+    return { src: `data:image/png;base64,${prepared.png.toString("base64")}`, width: prepared.width, height: prepared.height };
+  }
+
   const info = imageInfo(buf);
   if (!info || !info.width || !info.height) throw new Error("Rasm formati notanish.");
   return { src: `data:${info.mime};base64,${buf.toString("base64")}`, ...info };
@@ -120,50 +120,144 @@ async function loadPortrait(url: string) {
 /* Matnlar                                                            */
 /* ------------------------------------------------------------------ */
 
-export type PostTexts = { name: FittedText; study: FittedText; achievement: FittedText | null };
-
-export function postTexts(anketa: Anketa): PostTexts {
-  const a = sanitizeAnswers(anketa.answers_fixed ?? anketa.answers);
-  const name = (a.full_name || anketa.full_name).replace(/\s+/g, " ").trim();
-  // Ta'lim bo'lmasa — hozirgi faoliyat yoziladi (quti bo'sh qolmasin).
-  const study = educationLine(a) || a.activity.trim();
-  const achievement = achievementLine(a);
-
-  return {
-    name: fitText(name, { maxWidth: TEXT_WIDTH, maxSize: 44, minSize: 26, weight: "bold", threeLinesBelow: 30 }),
-    study: fitText(study, { maxWidth: TEXT_WIDTH, maxSize: 38, minSize: 24, weight: "semibold", threeLinesBelow: 30 }),
-    achievement: achievement
-      ? fitText(achievement, { maxWidth: TEXT_WIDTH, maxSize: 38, minSize: 24, weight: "semibold", threeLinesBelow: 30 })
-      : null,
-  };
+/**
+ * Ixtiyoriy: ANTHROPIC_API_KEY bo'lsa — 3–4 qisqa gapni AI yozadi.
+ * Bo'lmasa yoki natija mos kelmasa — qoidalar asosidagi gaplar.
+ */
+async function writeSentences(a: AnketaAnswers): Promise<string[]> {
+  const fallback = postSentences(a);
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return fallback;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({
+        model: process.env.ANTHROPIC_MODEL || "claude-haiku-5-5",
+        max_tokens: 400,
+        system:
+          "Siz ensiklopediya muharririsiz. Berilgan maʼlumotlar asosida oʻzbek tilida (lotin, oʻ/gʻ uchun ʻ belgisi) shaxs haqida 3 yoki 4 ta QISQA gap yozing: har biri 5–12 soʻz, uchinchi shaxsda, rasmiy uslubda, faqat berilgan faktlar. Shaxs ismini yozmang (u alohida yoziladi). Roʻyxat belgisi, emoji, qavs yoʻq. Jami 300 belgidan oshmasin. Har bir gap alohida qatorda. Faqat gaplarni qaytaring.",
+        messages: [
+          {
+            role: "user",
+            content: JSON.stringify({
+              faoliyat: a.activity,
+              haqida: a.about,
+              tugilgan_joy: a.birth_place,
+              talim: [a.study_place, a.study_direction].filter(Boolean).join(", "),
+              tajriba: a.experience.map((x) => x.title),
+              yutuqlar: a.skipped.includes("achievements") ? [] : a.achievements.map((x) => x.title),
+              loyihalar: a.projects.map((x) => x.title),
+            }),
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) return fallback;
+    const data = (await res.json()) as { content?: { type: string; text?: string }[] };
+    const text = data.content?.find((c) => c.type === "text")?.text?.trim() ?? "";
+    const lines = text
+      .split(/\n+/)
+      .map((l) => l.replace(/^[\s\-–—•*\d.)]+/, "").trim())
+      .filter(Boolean);
+    const total = lines.join(" ").length;
+    if (lines.length < 2 || lines.length > 4 || total > 340 || /[{}<>]/.test(text)) return fallback;
+    return lines;
+  } catch {
+    return fallback;
+  }
 }
 
-function TextBox({ box, text, weight }: { box: { top: number; height: number }; text: FittedText; weight: 600 | 700 }) {
+export type PostTexts = { name: FittedText; body: FittedText };
+
+const BODY = { maxSize: 30, minSize: 23, lineHeight: 1.42, maxLines: 10 };
+const NAME_GAP = 26; // F.I.Sh va matn orasidagi joy (chiziq bilan)
+
+/** F.I.Sh (qalin) + qisqa matn — chap ustunga sig'adigan qilib. */
+function layoutTexts(name: string, sentences: string[]): PostTexts {
+  const nameFit = fitText(name, { maxWidth: TEXT.width, maxSize: 54, minSize: 36, weight: "bold" });
+  const nameHeight = nameFit.lines.length * nameFit.size * 1.12;
+  const room = TEXT.bottom - TEXT.top - nameHeight - NAME_GAP;
+
+  let list = sentences.slice();
+  while (list.length) {
+    const body = list.join(" ");
+    for (let size = BODY.maxSize; size >= BODY.minSize; size -= 1) {
+      const lines = wrapText(body, size, TEXT.width, "semibold");
+      if (lines.length <= BODY.maxLines && lines.length * size * BODY.lineHeight <= room) {
+        return { name: nameFit, body: { lines, size } };
+      }
+    }
+    list = list.slice(0, -1); // sig'masa — oxirgi gap tushib qoladi
+  }
+  return { name: nameFit, body: { lines: [], size: BODY.maxSize } };
+}
+
+export async function postTexts(anketa: Anketa): Promise<PostTexts> {
+  const a = sanitizeAnswers(anketa.answers_fixed ?? anketa.answers);
+  const name = (a.full_name || anketa.full_name).replace(/\s+/g, " ").trim();
+  return layoutTexts(name, await writeSentences(a));
+}
+
+const TEXT_SHADOW = "0 2px 12px rgba(0, 20, 90, 0.45)";
+
+function TextColumn({ texts }: { texts: PostTexts }) {
   return (
     <div
       style={{
         position: "absolute",
-        left: TEXT_LEFT,
-        top: box.top,
-        width: TEXT_WIDTH,
-        height: box.height,
+        left: TEXT.left,
+        top: TEXT.top,
+        width: TEXT.width,
+        height: TEXT.bottom - TEXT.top,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
+        justifyContent: "flex-end",
       }}
     >
-      {text.lines.map((line, i) => (
+      {texts.name.lines.map((line, i) => (
         <div
-          key={i}
+          key={`n${i}`}
           style={{
             display: "flex",
             color: "#ffffff",
             fontFamily: "Inter",
-            fontWeight: weight,
-            fontSize: text.size,
-            lineHeight: 1.18,
-            letterSpacing: weight === 700 ? -0.3 : 0,
-            textShadow: "0 2px 10px rgba(0, 20, 80, 0.55)",
+            fontWeight: 700,
+            fontSize: texts.name.size,
+            lineHeight: 1.12,
+            letterSpacing: -0.5,
+            textShadow: TEXT_SHADOW,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {line}
+        </div>
+      ))}
+      {texts.body.lines.length ? (
+        <div
+          style={{
+            display: "flex",
+            width: 72,
+            height: 4,
+            borderRadius: 2,
+            marginTop: 11,
+            marginBottom: NAME_GAP - 15,
+            background: "rgba(255, 255, 255, 0.75)",
+          }}
+        />
+      ) : null}
+      {texts.body.lines.map((line, i) => (
+        <div
+          key={`b${i}`}
+          style={{
+            display: "flex",
+            color: "rgba(255, 255, 255, 0.95)",
+            fontFamily: "Inter",
+            fontWeight: 600,
+            fontSize: texts.body.size,
+            lineHeight: BODY.lineHeight,
+            textShadow: TEXT_SHADOW,
             whiteSpace: "nowrap",
           }}
         >
@@ -179,38 +273,26 @@ function TextBox({ box, text, weight }: { box: { top: number; height: number }; 
 /* ------------------------------------------------------------------ */
 
 /**
- * Shablon + nomzodning fonsiz rasmi + F.I.Sh / ta'lim / yutuq → PNG.
- * Yutuq bo'lmasa — 3-qutisiz shablon ishlatiladi.
+ * Shablon + nomzodning fonsiz rasmi (beligacha, o'ngda) +
+ * chapda F.I.Sh va 3–4 qisqa gap → PNG.
  */
 export async function renderPostImage(anketa: Anketa): Promise<Buffer> {
   if (!anketa.photo_url) throw new Error("Nomzod rasmi yoʻq.");
-  const [files, portrait] = await Promise.all([loadAssets(), loadPortrait(anketa.photo_url)]);
-  const texts = postTexts(anketa);
+  const [files, portrait, texts] = await Promise.all([loadAssets(), loadPortrait(anketa.photo_url), postTexts(anketa)]);
 
   const scale = Math.min(PORTRAIT.maxWidth / portrait.width, PORTRAIT.maxHeight / portrait.height);
   const pw = Math.round(portrait.width * scale);
   const ph = Math.round(portrait.height * scale);
+  const left = Math.min(SIZE - pw, Math.max(PORTRAIT.minLeft, Math.round(PORTRAIT.centerX - pw / 2)));
 
   const response = new ImageResponse(
     (
       <div style={{ width: SIZE, height: SIZE, display: "flex", position: "relative" }}>
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-        <img
-          src={texts.achievement ? files.full : files.noAchievement}
-          width={SIZE}
-          height={SIZE}
-          style={{ position: "absolute", left: 0, top: 0 }}
-        />
+        <img src={files.template} width={SIZE} height={SIZE} style={{ position: "absolute", left: 0, top: 0 }} />
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-        <img
-          src={portrait.src}
-          width={pw}
-          height={ph}
-          style={{ position: "absolute", left: Math.round(PORTRAIT.centerX - pw / 2), top: PORTRAIT.bottom - ph }}
-        />
-        <TextBox box={BOXES.name} text={texts.name} weight={700} />
-        <TextBox box={BOXES.study} text={texts.study} weight={600} />
-        {texts.achievement ? <TextBox box={BOXES.achievement} text={texts.achievement} weight={600} /> : null}
+        <img src={portrait.src} width={pw} height={ph} style={{ position: "absolute", left, top: SIZE - ph }} />
+        <TextColumn texts={texts} />
       </div>
     ),
     {

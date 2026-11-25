@@ -1,7 +1,7 @@
 # Telegram bot va anketa — ishga tushirish
 
 ## 1. Supabase
-Mavjud YoshlarWiki bazasida avvalgi migratsiyadan keyin `supabase/migrations/20261125182400_ariza_bot_and_post_templates.sql` faylini qoʻllang. Yangi profillar uchun `standard` rangi ishlatiladi.
+Mavjud YoshlarWiki bazasida migratsiyalarni `supabase/migrations/` papkasidagi sana tartibida qoʻllang. `20261125230000_standard_candidate_theme.sql` barcha profillarni standart fonga oʻtkazadi va avvalgi ranglarni tiklash uchun yopiq jadvalga saqlaydi.
 
 ## 2. Vercel (Settings → Environment Variables)
 Faqat **bitta** kalit kerak:
@@ -28,13 +28,11 @@ Admin panel → **Telegram bot** → «Telegram kanal va post havolalari»: kana
 4. **✅ Ha** → hammasi avtomatik: profil yaratiladi va saytda chiqadi, kanalga shablonli post ketadi, mos ariza «Nomzodga aylantirildi» boʻladi, adminga «Profil tayyor» va nomzodga forward qilinadigan chiroyli xabar keladi (WEB SAHIFA / TELEGRAM — havolalar F.I.Sh ichida).
    **❌ Yoʻq** → anketa «Toʻlanmagan» boʻlib qoladi; keyin admin panelda «Qoʻlda: toʻlov qilingan → chop etish» bosiladi.
 5. **Admin panel → Anketalar → anketa:** «Maʼlumotlarni tahrirlash» va «Rasmni almashtirish» (foni aniq model bilan avtomatik kesiladi). Profil saytda boʻlsa, saqlanganda profil ham, kanaldagi post ham (rasm va matn) avtomatik yangilanadi — post havolasi oʻzgarmaydi. Buning uchun bot kanalda **«Xabarlarni tahrirlash»** huquqiga ega boʻlishi kerak.
-6. **Profil rangi:** Nomzodlar → profil → «Profil rangi»: Standart / Och koʻk / Och pushti / Gold. Faqat saytdagi profil sahifasining orqa foni oʻzgaradi. Yangi profillar «Standart» boʻlib yaratiladi.
+6. **Profil foni:** barcha profillar saytning standart fonidan foydalanadi.
 
-## Telegram post rasmi (shablon)
-`src/assets/post/template.jpg` (1254×1254) ustiga: oʻngda nomzodning fonsiz rasmi, 1-qutida F.I.Sh, 2-qutida taʼlim, 3-qutida eng katta yutuq.
-- Matnni AI emas, kod qisqartiradi: mashhur oliygohlar qisqartmasi (TATU, OʻzMU…), «talabasi», «3-kurs» kabi soʻzlar olib tashlanadi; qutiga sigʻmasa shrift kichrayadi, oxirida «…».
-- Yutuq boʻlmasa `template-2.jpg` (3-qutisiz) ishlatiladi.
-- Shablonni almashtirish: shu ikki faylni bir xil oʻlchamda (1254×1254) yangisiga almashtiring.
+## Telegram post rasmi
+
+`src/assets/post/template.jpg` (1254×1254) shablonida chapda ism va qisqa taʼrif, oʻngda nomzod portreti joylashadi. «Postni yangi shablonda yangilash» tugmasi kanaldagi postni joyida tahrirlaydi.
 
 ## Ariza boshqaruv bot
 Admin panel → **Ariza boshqaruv bot**. Anketa botidan **alohida** bot kerak (@BotFather → /newbot).

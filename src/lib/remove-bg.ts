@@ -10,6 +10,8 @@
  *  - white:  1080×1350 oq fonli JPG (Telegram post uchun)
  */
 
+import { cleanEdges } from "./edge-clean";
+
 const TRANSFORMERS_CDN = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3";
 const MAX_SIDE = 2048;
 
@@ -204,6 +206,8 @@ export async function processPortrait(
           const v = a < 0.1 ? 0 : a > 0.9 ? 1 : (a - 0.1) / 0.8;
           pixels.data[i * 4 + 3] = Math.round(v * 255);
         }
+        // Soch/yelka atrofidagi oq chiziq va soyani olib tashlash (asl fon rangi hali bor).
+        cleanEdges(pixels.data, w, h, { backgroundKnown: true });
         base.ctx.putImageData(pixels, 0, 0);
         result = cropToContent(base.c);
         removed = true;

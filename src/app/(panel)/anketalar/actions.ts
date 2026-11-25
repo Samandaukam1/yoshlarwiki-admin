@@ -62,7 +62,7 @@ export async function publishAnketa(_prev: BotResult, fd: FormData): Promise<Bot
   return { status: res.ok ? "success" : "error", message: res.message };
 }
 
-/* Kanalga qayta yuborish (post chiqmagan bo'lsa) */
+/* Kanalga yuborish / mavjud postni yangi shablon bilan yangilash (eski profillar uchun ham) */
 export async function repostToChannel(_prev: BotResult, fd: FormData): Promise<BotResult> {
   const { anketa, error } = await load(fd);
   if (!anketa) return { status: "error", message: error ?? "Xatolik." };
@@ -76,7 +76,10 @@ export async function repostToChannel(_prev: BotResult, fd: FormData): Promise<B
     .update({ post_url: post.url, post_image_url: post.imageUrl })
     .eq("id", anketa.id);
   refresh(anketa.id);
-  return { status: "success", message: "Telegram post yuborildi." };
+  return {
+    status: "success",
+    message: post.url === anketa.post_url ? "Post yangi shablonda yangilandi." : "Telegram post yuborildi.",
+  };
 }
 
 /* ------------------------------------------------------------------ */

@@ -263,3 +263,65 @@ export function fitText(
   lines[maxLines - 1] = `${last.replace(/[\s,.;:–—-]+$/, "")}…`;
   return { lines, size };
 }
+
+/* ------------------------------------------------------------------ */
+/* Post rasmi uchun 3–4 qisqa gap                                     */
+/* ------------------------------------------------------------------ */
+
+const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+const endDot = (t: string) => (/[.!?…]$/.test(t) ? t : `${t}.`);
+
+/** So'z chegarasida qisqartirish. */
+function clipWords(text: string, max: number): string {
+  const t = tidy(text);
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const space = cut.lastIndexOf(" ");
+  return `${tidy(space > max * 0.5 ? cut.slice(0, space) : cut)}…`;
+}
+
+const sentence = (t: string, max = 90) => {
+  const c = clipWords(t, max);
+  return c ? endDot(capitalize(c)) : "";
+};
+
+/**
+ * Nomzod yozgan maʼlumotdan 3–4 ta qisqa gap (AI ishlatilmaydi):
+ * faoliyat → taʼlim → eng katta yutuq → loyiha / tajriba / tugʻilgan joy.
+ */
+export function postSentences(a: AnketaAnswers): string[] {
+  const out: string[] = [];
+
+  if (a.activity.trim()) out.push(sentence(a.activity, 80));
+
+  const place = a.study_place.trim() ? shortInstitution(a.study_place) : "";
+  const direction = a.study_direction.trim() ? shortDirection(a.study_direction) : "";
+  if (place && direction && norm(place) !== norm(direction)) {
+    out.push(sentence(`${place.replace(/[.,;]+$/, "")}da «${direction}» yoʻnalishida taʼlim olgan`));
+  } else if (place) {
+    out.push(sentence(`${place.replace(/[.,;]+$/, "")}da taʼlim olgan`));
+  } else if (direction) {
+    out.push(sentence(`${direction} yoʻnalishida taʼlim olgan`));
+  }
+
+  const achievement = achievementLine(a);
+  if (achievement) out.push(sentence(achievement));
+
+  const project = a.projects.find((p) => p.title.trim());
+  const experience = a.experience.find((e) => e.title.trim());
+  if (project) out.push(sentence(`«${tidy(project.title).replace(/[«»"]/g, "")}» loyihasi muallifi`));
+  else if (experience) out.push(sentence(experience.title));
+
+  if (out.length < 4 && a.birth_place.trim()) {
+    out.push(sentence(`${tidy(a.birth_place).replace(/[.,;]+$/, "")}da tugʻilgan`));
+  }
+
+  // O'zi haqidagi matndan — gaplar kam bo'lsa, birinchi qisqa gap.
+  if (out.length < 3 && a.about.trim()) {
+    const first = (a.about.replace(/\s+/g, " ").match(/[^.!?]+[.!?]*/g) ?? []).map((x) => x.trim())[0];
+    const firstPerson = /(^|\s)(men|mening|meni|menga)(\s|[,.!?]|$)|[a-zʻʼ']+(man|dim|ganman|yapman)([,.!?]|\s|$)/i;
+    if (first && !firstPerson.test(first)) out.push(sentence(first, 100));
+  }
+
+  return out.filter(Boolean).slice(0, 4);
+}

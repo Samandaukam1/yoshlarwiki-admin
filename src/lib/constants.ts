@@ -80,18 +80,6 @@ export const CANDIDATE_STATUS_TONES: Record<CandidateStatus, Tone> = {
   archived: "neutral",
 };
 
-/**
- * Nomzod profili rangi — saytdagi profil sahifasining FAQAT orqa foni.
- * Matnlar, tugmalar va kartochkalar o'zgarmaydi. "standard" — saytning o'z foni.
- */
-export const THEME_COLORS = [
-  { value: "standard", label: "Standart", swatch: "#F6F2EA", ink: "#2b2b2b" },
-  { value: "blue", label: "Och koʻk", swatch: "#D6E5F7", ink: "#0b4a7a" },
-  { value: "pink", label: "Och pushti", swatch: "#F6D9E5", ink: "#8a1d55" },
-  { value: "gold", label: "Gold", swatch: "#EEDBAE", ink: "#5c4710" },
-] as const;
-export type ThemeColor = (typeof THEME_COLORS)[number]["value"];
-
 export const EDUCATION_LEVELS = [
   { value: "orta", label: "Oʻrta" },
   { value: "orta_maxsus", label: "Oʻrta maxsus" },

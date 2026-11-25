@@ -271,7 +271,16 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
                 {!published && anketa.payment_status === "tolandi" && writable ? (
                   <AnketaAction id={id} kind="publish" full />
                 ) : null}
-                {published && !anketa.post_url && writable ? <AnketaAction id={id} kind="repost" full /> : null}
+                {published && writable ? (
+                  <AnketaAction
+                    id={id}
+                    kind={anketa.post_url ? "update" : "repost"}
+                    full
+                    confirmText={
+                      anketa.post_url ? "Kanaldagi post rasmi va matni yangi shablon bilan almashtirilsinmi?" : undefined
+                    }
+                  />
+                ) : null}
               </Stage>
             </ol>
           </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Banknote, Globe, Loader2, Megaphone, Send, XCircle } from "lucide-react";
+import { Banknote, Globe, Loader2, Megaphone, RefreshCw, Send, XCircle } from "lucide-react";
 import { useActionState } from "react";
 
 import {
@@ -20,7 +20,8 @@ const ACTIONS = {
   payment: { fn: requestPayment, label: "Tekshirish", icon: Send, variant: "primary" },
   manual: { fn: markPaidManually, label: "Qoʻlda: toʻlov qilingan → chop etish", icon: Banknote, variant: "ghost" },
   publish: { fn: publishAnketa, label: "Saytda chiqarish", icon: Globe, variant: "primary" },
-  repost: { fn: repostToChannel, label: "Kanalga qayta yuborish", icon: Megaphone, variant: "secondary" },
+  repost: { fn: repostToChannel, label: "Kanalga post yuborish", icon: Megaphone, variant: "secondary" },
+  update: { fn: repostToChannel, label: "Postni yangi shablonda yangilash", icon: RefreshCw, variant: "secondary" },
   reject: { fn: rejectAnketa, label: "Rad etish", icon: XCircle, variant: "danger" },
 } satisfies Record<string, { fn: Action; label: string; icon: typeof Send; variant: ButtonVariant }>;
 
