@@ -6,257 +6,43 @@ import type { Tone } from "@/components/ui";
 /* O'ZGARMAYDI: admin paneldan tahrirlanmaydi.                        */
 /* ------------------------------------------------------------------ */
 
-export const PORTRAIT_PROMPT = `Use the uploaded PERSON IMAGE as the ONLY identity reference.
-Create a new ultra-photorealistic professional studio portrait of the SAME PERSON from the uploaded image.
-CRITICAL IDENTITY PRESERVATION:
-Preserve the person exactly and naturally.
-Do NOT redesign, beautify, idealize, replace, age, de-age, masculinize, feminize, or reinterpret the person.
-Keep unchanged:
-exact facial identity
-facial structure and proportions
-head shape and head size
-eyes
-eyebrows
-nose
-lips
-jawline
-ears
-skin tone
-natural skin characteristics
-hairstyle
-hairline
-hair texture
-hair color
-hair volume
-natural body type
-shoulder width
-body proportions
-apparent age
-gender presentation
-The final image must clearly look like the SAME PERSON from the uploaded image.
-Do NOT create a similar-looking AI person.
-Do NOT replace the face.
-Do NOT modify facial proportions.
-========================================
-EXACT BODY POSE
-Create a confident professional three-quarter standing portrait.
-IMPORTANT:
-The subject must NOT stand directly facing the camera.
-Judge left and right from the viewer’s perspective in the finished image.
-Turn the chest and hips 25–35 degrees toward the viewer’s right.
-The shoulder on the viewer’s left is closer to the camera.
-The shoulder on the viewer’s right is farther from the camera.
-Keep the arms naturally crossed. Turn the face back toward the camera and look directly into the lens.
-The chest must be visibly angled away from the camera.
-The shoulders must NOT be parallel to the image plane.
-The body must clearly have depth and three-dimensional orientation.
-Do NOT create a flat frontal pose.
-BODY DIRECTION:
-torso and hips turned slightly toward image-right.
-HEAD DIRECTION:
-turn the head gently back toward the camera.
-EYE DIRECTION:
-eyes looking directly into the camera lens.
-IMPORTANT BODY–HEAD RELATIONSHIP:
-The torso and the face must NOT point in exactly the same direction.
-The torso remains angled toward image-right,
-while the face turns back toward the camera.
-This body/head separation is essential.
-========================================
-HEAD AND EXPRESSION
-Head held naturally upright.
-Chin raised very slightly.
-Neck elongated naturally.
-Face mostly toward camera but with a subtle three-quarter orientation.
-Do NOT create a perfectly symmetrical passport-photo face angle.
-Expression:
-calm
-serious
-self-confident
-relaxed
-premium professional presence
-lips naturally closed
-no smile
-no exaggerated emotion
-Do NOT make the expression aggressive.
-========================================
-ARMS
-Both arms crossed naturally across the chest.
-One forearm rests naturally over the other.
-Hands partially visible near the opposite upper arms.
-Elbows positioned naturally.
-The crossed arms must follow the diagonal orientation of the torso.
-Do NOT make the arms perfectly symmetrical.
-Do NOT create a stiff or unnatural crossed-arm pose.
-Hands and fingers must be anatomically correct.
-========================================
-POSTURE
-Straight but relaxed posture.
-Chest naturally open.
-Shoulders relaxed.
-Upper body confident and elegant.
-Do NOT enlarge the chest.
-Do NOT make the person more muscular.
-Do NOT make the person thinner or broader.
-Preserve the person's original natural body build exactly.
-========================================
-CAMERA
-Professional full-frame portrait photography.
-Camera position:
-approximately at upper-chest to shoulder height.
-Lens:
-approximately 70–85mm full-frame equivalent.
-Use natural portrait compression.
-Camera must remain physically in front of the subject.
-IMPORTANT:
-Create the three-quarter perspective by rotating the SUBJECT,
-not by moving the camera excessively to the side.
-No wide-angle lens.
-No close-up distortion.
-No oversized head.
-No exaggerated shoulders.
-No perspective distortion.
-No Dutch angle.
-========================================
-CAMERA DISTANCE AND FRAMING
-Vertical portrait composition.
-Camera distance approximately 2.5–3.5 meters from the subject.
-Frame from approximately lower waist / upper hip level upward.
-Entire head visible.
-Entire shoulders visible.
-Both crossed arms fully visible.
-Do not crop the elbows unnaturally.
-Leave a small clean amount of space above the hair.
-Subject occupies approximately 75–82% of the frame height.
-The composition must feel like a premium editorial corporate portrait,
-not an ID photo.
-Do NOT force perfectly centered symmetry.
-The diagonal three-quarter body orientation must remain visually obvious.
-========================================
-LIGHTING
-Professional high-end studio lighting.
-Main key light:
-large soft diffused light approximately 35–45 degrees from camera-left,
-slightly above eye level.
-Soft fill light from camera-right.
-Natural dimensional modeling on the face.
-The side of the face farther from the key light may be slightly darker.
-Create subtle depth across:
-face
-jaw
-neck
-shoulders
-jacket or clothing
-Soft natural shadows only.
-No harsh shadows.
-No flat passport lighting.
-No dramatic cinematic darkness.
-No colored lighting.
-No neon.
-No strong rim light.
-Neutral daylight-balanced white balance.
-Natural realistic skin color.
-========================================
-PHOTOREALISM
-Ultra-photorealistic commercial studio photography.
-Extremely realistic facial detail.
-Natural skin texture.
-Visible natural skin pores.
-Realistic individual hair strands.
-Accurate eye reflections.
-Realistic eyelashes and eyebrows.
-Natural lips.
-Realistic hands and fingers.
-Physically realistic clothing folds.
-Realistic fabric texture.
-Natural photographic depth.
-High dynamic range.
-Professional camera sharpness.
-Do NOT over-retouch.
-Do NOT smooth the skin excessively.
-Do NOT create plastic skin.
-Do NOT create CGI appearance.
-Do NOT create illustration appearance.
-Do NOT create an AI-generated face aesthetic.
-========================================
-BACKGROUND
-TRUE TRANSPARENT BACKGROUND.
-The final subject must be completely isolated.
-Use a real alpha channel.
-NO:
-white background
-gray background
-black background
-colored background
-studio wall
-gradient
-floor
-environment
-furniture
-props
-text
-logo
-decorative elements
-artificial shadow behind subject
-The background must contain ZERO visible pixels behind the subject.
-Preserve extremely clean natural edges around:
-hair
-individual hair strands
-ears
-neck
-shoulders
-arms
-hands
-clothing
-No white halo.
-No dark halo.
-No glow.
-No outline.
-No background contamination.
-Output as high-resolution PNG with true alpha transparency.
-========================================
-STRICT NEGATIVE INSTRUCTIONS
-ABSOLUTELY DO NOT:
-make the person face straight forward with the whole body
-create a passport-photo pose
-create a symmetrical frontal torso
-align both shoulders horizontally toward the camera
-make both shoulders equally distant from camera
-flatten the torso
-point head and torso in exactly the same direction
-change the person's face
-change the person's hairstyle
-change the person's body type
-beautify the person
-change apparent age
-exaggerate muscles
-alter shoulder width
-distort hands
-crop the head
-use wide-angle perspective
-create artificial background
-========================================
-FINAL PRIORITY ORDER
-Preserve exact identity.
-Preserve exact natural body proportions.
-Torso rotated 25–35 degrees toward image-right.
-Head turned back toward camera.
-Eyes directly into camera.
-Clear diagonal shoulder line.
-Natural crossed-arm pose.
-70–85mm portrait-camera perspective.
-Medium portrait camera distance.
-Soft dimensional studio lighting.
-Ultra-photorealistic result.
-True transparent background.
-The final result must feel confident, elegant, premium and editorial.
-Most importantly:
-BODY IS TURNED.
-FACE RETURNS TOWARD CAMERA.
-EYES LOOK INTO CAMERA.
-Never turn the entire person directly toward the camera.
+export const PORTRAIT_PROMPT = `Use the uploaded photo as the ONLY identity reference. Create an ultra-photorealistic studio portrait of the SAME PERSON.
 
-`;
+IDENTITY (do not change)
+
+Exact face, facial proportions, head shape, eyes, eyebrows, nose, lips, jawline, ears, skin tone and natural skin texture, hairstyle, hairline, hair color, body build, shoulder width, apparent age. Do not beautify, retouch heavily, slim, broaden or reinterpret. It must clearly be the same person, not a lookalike.
+
+POSE (fixed, must be identical every time)
+
+Perfectly frontal, straight-on view. The person faces the camera head-on, like a passport-style front view but relaxed and confident.
+
+- Nose, chin, sternum and belt line are on one vertical center line, pointing straight at the lens.
+
+- Both shoulders at the same height and the same distance from the camera. No body turn, no three-quarter angle, no diagonal shoulder line.
+
+- Neutral head position: head upright and level, no tilt, no turn, chin neither raised nor lowered. Eyes look straight into the lens.
+
+- Arms crossed over the chest: right forearm over left forearm (the person's own right over left), hands tucked lightly near the opposite upper arms, elbows relaxed and slightly out.
+
+- Completely neutral face and expression: relaxed face muscles, lips gently closed and relaxed, no smile, no smirk, no frown, eyebrows relaxed and level, eyes calm and open naturally, no squinting, no raised cheeks. Emotionless, like a neutral reference photo.
+
+- Weight evenly on both legs, standing straight. Posture tall, chest open.
+
+FRAMING (fixed)
+
+Vertical 2:3 portrait. Camera straight in front at upper-chest height, 85mm lens look, no wide-angle distortion. Frame from upper hips up. Whole head, shoulders and both arms visible. Small space above the hair. Subject fills about 80% of the frame height, centered.
+
+LIGHTING (fixed)
+
+Large soft key light from camera-left, slightly above eye level, soft fill from camera-right. Natural soft shadows, neutral daylight white balance, natural skin color. No colored light, no harsh shadows, no rim light.
+
+REALISM
+
+Natural skin pores, individual hair strands, realistic hands and fabric folds. No plastic skin, no CGI or illustration look.
+
+BACKGROUND
+
+Plain, perfectly flat, solid pure white background. No gradient, no floor, no shadow behind the subject, no props, no text. Clean sharp edges around hair and clothing.`;
 
 /* ------------------------------------------------------------------ */
 /* Javoblar tuzilmasi                                                 */
