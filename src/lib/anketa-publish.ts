@@ -171,6 +171,13 @@ export async function publishAnketaById(
     })
     .eq("id", anketa.id);
 
+  if (post.ok) {
+    await db
+      .from("candidates")
+      .update({ post_url: post.url, post_image_url: post.imageUrl, posted_at: now })
+      .eq("id", anketa.candidate_id!);
+  }
+
   const a = answersOf(anketa);
   await convertMatchingApplication(a, anketa.candidate_id!);
 
@@ -219,6 +226,10 @@ export async function syncAnketaAfterEdit(id: string): Promise<Result> {
     .from("anketalar")
     .update({ post_url: post.url, post_image_url: post.imageUrl })
     .eq("id", anketa.id);
+  await createAdminClient()
+    .from("candidates")
+    .update({ post_url: post.url, post_image_url: post.imageUrl })
+    .eq("id", anketa.candidate_id);
 
   return post.url === anketa.post_url
     ? { ok: true, message: "Saqlandi: profil va kanaldagi post yangilandi." }

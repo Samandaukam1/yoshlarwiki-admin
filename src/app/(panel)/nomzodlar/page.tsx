@@ -1,22 +1,16 @@
-import Image from "next/image";
-import Link from "next/link";
 import type { Metadata } from "next";
-import { ExternalLink, Plus, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
+
+import { BulkPostTable, type BulkRow } from "./bulk-table";
 
 import { CandidateFilters } from "./filters";
 import {
-  Badge,
   ButtonLink,
   EmptyState,
   formatDateTime,
-  MobileItem,
-  MobileList,
   PageHeader,
-  TableWrap,
-  Td,
-  Th,
 } from "@/components/ui";
-import { requireAdmin } from "@/lib/auth";
+import { canWrite, requireAdmin } from "@/lib/auth";
 import {
   CANDIDATE_STATUS_LABELS,
   CANDIDATE_STATUS_TONES,
@@ -29,7 +23,8 @@ export const metadata: Metadata = { title: "Nomzodlar" };
 export const dynamic = "force-dynamic";
 
 export default async function CandidatesPage(props: PageProps<"/nomzodlar">) {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  const writable = canWrite(admin);
   const searchParams = await props.searchParams;
 
   const str = (key: string) => {
@@ -89,112 +84,27 @@ export default async function CandidatesPage(props: PageProps<"/nomzodlar">) {
           />
         </div>
       ) : (
-        <>
-        {/* Telefonda — kartochkalar, kengroq ekranda — jadval. */}
-        <div className="mt-6 md:hidden">
-          <MobileList>
-            {rows.map((item) => {
-              const category = item.category as { name: string } | null;
-              const candidateStatus = item.status as CandidateStatus;
-              return (
-                <MobileItem key={item.id} className="p-0">
-                  <Link href={`/nomzodlar/${item.id}`} className="flex items-center gap-3 p-3.5">
-                    <span className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-surface-2">
-                      {item.portrait_url ? (
-                        <Image src={item.portrait_url} alt="" fill sizes="56px" className="object-cover object-top" />
-                      ) : null}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[14.5px] font-semibold text-ink">{item.full_name}</span>
-                      <span className="mt-0.5 block truncate text-[12.5px] text-ink-3">
-                        {category?.name ?? "Kategoriya yoʻq"}
-                      </span>
-                      <span className="mt-1.5 flex items-center gap-2 text-[12px] text-ink-3">
-                        <Badge tone={CANDIDATE_STATUS_TONES[candidateStatus] ?? "neutral"}>
-                          {CANDIDATE_STATUS_LABELS[candidateStatus] ?? candidateStatus}
-                        </Badge>
-                        <span className="tabular-nums">{item.view_count} koʻrish</span>
-                      </span>
-                    </span>
-                  </Link>
-                </MobileItem>
-              );
-            })}
-          </MobileList>
-        </div>
-
-        <div className="mt-6 hidden md:block">
-          <TableWrap>
-            <thead>
-              <tr>
-                <Th>Nomzod</Th>
-                <Th>Kategoriya</Th>
-                <Th>Holat</Th>
-                <Th>Koʻrishlar</Th>
-                <Th>Yangilangan</Th>
-                <Th />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((item) => {
-                const category = item.category as { name: string } | null;
-                const candidateStatus = item.status as CandidateStatus;
-                return (
-                  <tr key={item.id} className="transition-colors hover:bg-surface-hover">
-                    <Td>
-                      <Link
-                        href={`/nomzodlar/${item.id}`}
-                        className="flex items-center gap-3"
-                      >
-                        <span className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-surface-2">
-                          {item.portrait_url ? (
-                            <Image
-                              src={item.portrait_url}
-                              alt=""
-                              fill
-                              sizes="40px"
-                              className="object-cover object-top"
-                            />
-                          ) : null}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block truncate font-semibold text-ink">
-                            {item.full_name}
-                          </span>
-                          <span className="block truncate text-[12px] text-ink-3">
-                            /{item.slug}
-                          </span>
-                        </span>
-                      </Link>
-                    </Td>
-                    <Td>{category?.name ?? <span className="text-ink-3">—</span>}</Td>
-                    <Td>
-                      <Badge tone={CANDIDATE_STATUS_TONES[candidateStatus] ?? "neutral"}>
-                        {CANDIDATE_STATUS_LABELS[candidateStatus] ?? candidateStatus}
-                      </Badge>
-                    </Td>
-                    <Td className="tabular-nums">{item.view_count}</Td>
-                    <Td className="whitespace-nowrap">{formatDateTime(item.updated_at)}</Td>
-                    <Td>
-                      {item.status === "published" ? (
-                        <a
-                          href={`${siteUrl}/yoshlar/${item.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`${item.full_name} profilini saytda koʻrish`}
-                          className="inline-grid size-8 place-items-center rounded-md text-ink-3 hover:bg-surface-hover hover:text-accent-text"
-                        >
-                          <ExternalLink className="size-4" strokeWidth={1.9} />
-                        </a>
-                      ) : null}
-                    </Td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </TableWrap>
-        </div>
-        </>
+        <BulkPostTable
+          siteUrl={siteUrl}
+          writable={writable}
+          rows={rows.map((item) => {
+            const candidateStatus = item.status as CandidateStatus;
+            return {
+              id: item.id,
+              full_name: item.full_name,
+              slug: item.slug,
+              portrait_url: item.portrait_url,
+              status: item.status,
+              status_label: CANDIDATE_STATUS_LABELS[candidateStatus] ?? candidateStatus,
+              status_tone: CANDIDATE_STATUS_TONES[candidateStatus] ?? "neutral",
+              category: (item.category as { name: string } | null)?.name ?? null,
+              view_count: item.view_count,
+              updated_label: formatDateTime(item.updated_at),
+              post_url: item.post_url,
+              theme_color: item.theme_color,
+            } satisfies BulkRow;
+          })}
+        />
       )}
     </>
   );

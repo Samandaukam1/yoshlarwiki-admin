@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, Download, ExternalLink, ImageOff, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, CircleCheck, Download, ExternalLink, ImageOff, Trash2 } from "lucide-react";
 
 import { CopyButton } from "./copy-button";
 import { AnketaAction } from "./detail-actions";
@@ -193,7 +193,15 @@ export default async function AnketaDetailPage(props: PageProps<"/anketalar/[id]
         <aside className="grid content-start gap-4">
           {anketa.candidate_id ? (
             <Card className={published ? "border-success" : ""}>
-              <CardTitle>{published ? "✅ Profil tayyor" : "Profil (qoralama)"}</CardTitle>
+              <CardTitle>
+                {published ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <CircleCheck className="size-[18px] text-success" strokeWidth={2.2} /> Profil tayyor
+                  </span>
+                ) : (
+                  "Profil (qoralama)"
+                )}
+              </CardTitle>
               <dl className="grid gap-2 text-[13px]">
                 <Row label="Havola yaratgan" value={botAdmin ? `${botAdmin.full_name}${botAdmin.telegram_username ? ` (@${botAdmin.telegram_username})` : ""}` : "—"} />
                 <Row label="F.I.Sh" value={fullName} />
@@ -413,7 +421,7 @@ function Stage({
           done ? "bg-success text-white" : "bg-surface-2 text-ink-3"
         }`}
       >
-        {done ? "✓" : n}
+        {done ? <Check className="size-3.5" strokeWidth={3} /> : n}
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-[13.5px] font-semibold text-ink">{title}</p>

@@ -111,7 +111,7 @@ export type StepKey =
   | "final";
 
 export const STEPS: { key: StepKey; title: string; hint: string; optional?: boolean }[] = [
-  { key: "photo", title: "Sifatli profilingiz rasmi", hint: "PNG yoki JPG. Rasm foni avtomatik olib tashlanadi." },
+  { key: "photo", title: "Sifatli profilingiz rasmi", hint: "Faqat pastdagi prompt orqali yasalgan shaffof fonli PNG rasm qabul qilinadi." },
   { key: "birth", title: "Tugʻilgan sana va joy", hint: "Sana va tugʻilgan shahar yoki tumaningiz." },
   { key: "activity", title: "Hozirgi faoliyatingiz", hint: "Masalan: «Dasturchi, IT Park rezidenti» yoki «Talaba, faol volontyor»." },
   { key: "about", title: "Oʻzingiz haqingizda qisqacha", hint: "3–6 gap: kimsiz, nima bilan shugʻullanasiz, maqsadingiz." },

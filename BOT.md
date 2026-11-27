@@ -1,7 +1,7 @@
 # Telegram bot va anketa — ishga tushirish
 
 ## 1. Supabase
-Mavjud YoshlarWiki bazasida migratsiyalarni `supabase/migrations/` papkasidagi sana tartibida qoʻllang. `20261125230000_standard_candidate_theme.sql` barcha profillarni standart fonga oʻtkazadi va avvalgi ranglarni tiklash uchun yopiq jadvalga saqlaydi.
+Mavjud YoshlarWiki bazasida migratsiyalarni `supabase/migrations/` papkasidagi sana tartibida qoʻllang. `supabase/migrations/20261127232200_yoshlarwiki_2_1.sql` VIP fonlar, kanal postlari va ko‘rishlar hisobini qoʻshadi.
 
 ## 2. Vercel (Settings → Environment Variables)
 Faqat **bitta** kalit kerak:
@@ -28,7 +28,8 @@ Admin panel → **Telegram bot** → «Telegram kanal va post havolalari»: kana
 4. **✅ Ha** → hammasi avtomatik: profil yaratiladi va saytda chiqadi, kanalga shablonli post ketadi, mos ariza «Nomzodga aylantirildi» boʻladi, adminga «Profil tayyor» va nomzodga forward qilinadigan chiroyli xabar keladi (WEB SAHIFA / TELEGRAM — havolalar F.I.Sh ichida).
    **❌ Yoʻq** → anketa «Toʻlanmagan» boʻlib qoladi; keyin admin panelda «Qoʻlda: toʻlov qilingan → chop etish» bosiladi.
 5. **Admin panel → Anketalar → anketa:** «Maʼlumotlarni tahrirlash» va «Rasmni almashtirish» (foni aniq model bilan avtomatik kesiladi). Profil saytda boʻlsa, saqlanganda profil ham, kanaldagi post ham (rasm va matn) avtomatik yangilanadi — post havolasi oʻzgarmaydi. Buning uchun bot kanalda **«Xabarlarni tahrirlash»** huquqiga ega boʻlishi kerak.
-6. **Profil foni:** barcha profillar saytning standart fonidan foydalanadi.
+6. **Profil foni:** Nomzodlar → profil → «Profil foni» orqali Oddiy yoki VIP fonni tanlang.
+7. **Nomzodlar** roʻyxatidan nashr etilgan profillarni tanlab Telegram kanaliga yuborish mumkin.
 
 ## Telegram post rasmi
 

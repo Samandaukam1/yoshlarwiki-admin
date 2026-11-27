@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CircleCheck, Inbox, ListChecks, Power, ShieldCheck, Trash2, UsersRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleCheck, CircleX, Inbox, ListChecks, Power, ShieldCheck, Trash2, UsersRound } from "lucide-react";
 
 import { deleteArizaBotAdmin, disconnectArizaBot, toggleArizaBotAdmin } from "./actions";
 import { ArizaAddAdminForm, ArizaConnectForm } from "./forms";
@@ -43,7 +43,7 @@ export default async function ArizaBotPage() {
       {!settings ? (
         <p className="mt-6 rounded-[10px] bg-danger-soft px-4 py-3 text-[13px] text-danger">
           Maʼlumotlar bazasida ariza boti jadvallari topilmadi. <code>supabase/migrations/20261125182400_ariza_bot_and_post_templates.sql</code> faylini
-          Supabase SQL Editor’da qoʻllang.
+          Supabase SQL Editor’da qayta ishga tushiring.
         </p>
       ) : null}
 
@@ -57,11 +57,12 @@ export default async function ArizaBotPage() {
         <CardTitle>Botda nima bor</CardTitle>
         <ul className="grid gap-2.5 text-[13.5px] leading-relaxed text-ink-2">
           <li>
-            <b className="text-ink">🆕 Yangi arizalar</b> va <b className="text-ink">📋 Jami arizalar</b> — har bir ariza: F.I.Sh,
-            telefon, Telegram, jins, yosh oraligʻi, promo kod, soat va sana. Har sahifada 10 tadan, ⬅️ ➡️ bilan varaqlanadi.
+            <b className="text-ink"><Inbox className="inline size-[1.05em] -mt-0.5 align-middle" /> Yangi arizalar</b> va{" "}
+            <b className="text-ink"><ListChecks className="inline size-[1.05em] -mt-0.5 align-middle" /> Jami arizalar</b> — har bir ariza: F.I.Sh,
+            telefon, Telegram, jins, yosh oraligʻi, promo kod, soat va sana. Har sahifada 10 tadan, <ArrowLeft className="inline size-[1.05em] -mt-0.5 align-middle" /> <ArrowRight className="inline size-[1.05em] -mt-0.5 align-middle" /> bilan varaqlanadi.
           </li>
           <li>
-            <b className="text-ink">❌ Arizani bekor qilish</b> — Telegram username yoziladi, tasdiqlansa ariza «Rad etildi» boʻladi.
+            <b className="text-ink"><CircleX className="inline size-[1.05em] -mt-0.5 align-middle text-danger" /> Arizani bekor qilish</b> — Telegram username yoziladi, tasdiqlansa ariza «Rad etildi» boʻladi.
           </li>
           <li>
             Anketa botida profil chop etilganda mos ariza (username yoki telefon boʻyicha) avtomatik{" "}

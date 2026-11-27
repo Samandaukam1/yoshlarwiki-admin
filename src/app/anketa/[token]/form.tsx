@@ -30,7 +30,8 @@ import {
   type AnketaAnswers,
   type StepKey,
 } from "@/lib/anketa";
-import { preloadBackgroundModel, processPortrait } from "@/lib/remove-bg";
+import { checkPromptPortrait } from "@/lib/portrait-check";
+import { processPortrait } from "@/lib/remove-bg";
 import { createClient } from "@/lib/supabase/client";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -168,7 +169,15 @@ export function AnketaForm({
         <div className="mx-auto flex h-16 max-w-[720px] items-center gap-3 px-5">
           <YoshlarWikiLogo variant="horizontal" className="h-8 w-auto" priority />
           <span className="ml-auto hidden text-[12px] text-ink-3 sm:block">
-            {saveState === "saving" ? "Saqlanmoqda…" : saveState === "saved" ? "Saqlandi ✓" : ""}
+            {saveState === "saving" ? (
+              "Saqlanmoqda…"
+            ) : saveState === "saved" ? (
+              <span className="inline-flex items-center gap-1">
+                Saqlandi <Check className="size-3.5" strokeWidth={2.6} />
+              </span>
+            ) : (
+              ""
+            )}
           </span>
           <ThemeToggle />
         </div>
@@ -554,11 +563,6 @@ function PhotoStep({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [status, setStatus] = useState("");
-  const [removeBg, setRemoveBg] = useState(true);
-
-  useEffect(() => {
-    preloadBackgroundModel();
-  }, []);
 
   const send = async (blob: Blob, variant: "portrait" | "white") => {
     const signed = await createPhotoUpload(token, blob.type, blob.size, variant);
@@ -574,7 +578,7 @@ function PhotoStep({
     if (!file) return;
     setError("");
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      setError("Faqat PNG yoki JPG rasm yuklang.");
+      setError("Faqat promptdan chiqqan PNG rasmni yuklang.");
       return;
     }
     if (file.size > 15 * 1024 * 1024) {
@@ -584,7 +588,14 @@ function PhotoStep({
 
     setUploading(true);
     try {
-      const processed = await processPortrait(file, { removeBackground: removeBg, onStatus: setStatus });
+      // Rasm promptimiz orqali yasalganmi (shaffof PNG, vertikal, beldan yuqori) — bo'lmasa qabul qilinmaydi.
+      setStatus("Rasm tekshirilmoqda…");
+      const check = await checkPromptPortrait(file);
+      if (!check.ok) {
+        setError(check.message);
+        return;
+      }
+      const processed = await processPortrait(file, { removeBackground: false, onStatus: setStatus });
       setStatus("Yuklanmoqda…");
       const [portraitPath, whitePath] = await Promise.all([
         send(processed.cutout, "portrait"),
@@ -593,9 +604,6 @@ function PhotoStep({
       const saved = await confirmPhoto(token, portraitPath, whitePath);
       if (!saved.ok) throw new Error(saved.message);
       setPhoto(saved.url);
-      if (removeBg && !processed.removed) {
-        setError("Fonni olib tashlab boʻlmadi — rasm asl holicha yuklandi.");
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Rasm yuklanmadi.");
     } finally {
@@ -646,7 +654,7 @@ function PhotoStep({
               <ImagePlus className="size-7" strokeWidth={1.7} />
             </span>
             <span className="text-[15px] font-semibold text-ink">Rasm yuklash</span>
-            <span className="text-[12.5px] text-ink-3">PNG yoki JPG · fon avtomatik olib tashlanadi</span>
+            <span className="text-[12.5px] text-ink-3">Faqat promptdan chiqqan shaffof fonli PNG</span>
           </span>
         )}
 
@@ -667,20 +675,14 @@ function PhotoStep({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/webp"
+        accept="image/png,image/webp"
         className="hidden"
         onChange={(e) => void upload(e.target.files?.[0])}
       />
 
-      <label className="-mt-2 flex items-center justify-center gap-2 text-[13px] text-ink-2">
-        <input
-          type="checkbox"
-          checked={removeBg}
-          onChange={(e) => setRemoveBg(e.target.checked)}
-          className="size-4 accent-[var(--yw-accent)]"
-        />
-        Fonni avtomatik olib tashlash
-      </label>
+      <p className="-mt-2 text-center text-[12.5px] leading-relaxed text-ink-3">
+        Oddiy rasm, skrinshot yoki fonli rasm qabul qilinmaydi — avval pastdagi prompt bilan rasm yasating.
+      </p>
 
       {photo ? (
         <p className="-mt-2 flex items-center justify-center gap-1.5 text-[13px] font-medium text-success">

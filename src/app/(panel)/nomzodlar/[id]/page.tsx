@@ -13,7 +13,9 @@ import {
   SocialSection,
   StatusControls,
 } from "./sections";
+import { ProfileThemePicker, SendPostCard } from "./theme-picker";
 import { deleteCandidate } from "../actions";
+import { normalizeTheme } from "@/lib/profile-theme";
 import { Badge, btn, Card, CardTitle, PageHeader } from "@/components/ui";
 import { canWrite, requireAdmin } from "@/lib/auth";
 import {
@@ -153,6 +155,19 @@ export default async function EditCandidatePage(
               Qoralama va arxiv profillar ommaga yopiq.
             </p>
           </Card>
+
+          <ProfileThemePicker
+            candidateId={id}
+            current={normalizeTheme(candidate.theme_color)}
+            disabled={!writable}
+          />
+
+          <SendPostCard
+            candidateId={id}
+            postUrl={candidate.post_url}
+            published={status === "published"}
+            disabled={!writable}
+          />
 
           <CategoryPicker
             candidateId={id}

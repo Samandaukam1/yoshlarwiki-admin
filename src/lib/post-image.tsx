@@ -6,6 +6,7 @@ import { ImageResponse } from "next/og";
 
 import { sanitizeAnswers, type AnketaAnswers } from "./anketa";
 import type { Anketa } from "./anketa-server";
+import { SUPABASE_URL } from "./config";
 import { preparePortrait } from "./portrait-crop";
 import { fitText, postSentences, wrapText, type FittedText } from "./post-text";
 
@@ -102,7 +103,16 @@ function imageInfo(buf: Buffer): { mime: string; width: number; height: number }
  * Eski profillar ham shu yerdan o'tadi — qayta yuklash shart emas.
  */
 async function loadPortrait(url: string) {
-  const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
+  const portraitUrl = new URL(url);
+  if (portraitUrl.origin !== new URL(SUPABASE_URL).origin ||
+      !portraitUrl.pathname.startsWith("/storage/v1/object/public/")) {
+    throw new Error("Portret Supabase Storage’dan yuklanishi kerak.");
+  }
+  const res = await fetch(portraitUrl, {
+    cache: "no-store",
+    redirect: "error",
+    signal: AbortSignal.timeout(15_000),
+  });
   if (!res.ok) throw new Error(`Rasm yuklanmadi (${res.status})`);
   const buf = Buffer.from(await res.arrayBuffer());
 

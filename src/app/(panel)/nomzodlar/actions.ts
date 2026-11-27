@@ -7,6 +7,9 @@ import { canWrite, requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { CANDIDATE_STATUSES, slugify, type CandidateStatus } from "@/lib/constants";
 import type { CmsResult } from "./types";
+import { sendCandidatePost } from "@/lib/candidate-post";
+import { isProfileTheme, PROFILE_THEME_INFO } from "@/lib/profile-theme";
+import { adminBaseUrl } from "@/lib/telegram";
 
 /* ------------------------------------------------------------------ */
 /* Yordamchilar                                                       */
@@ -348,4 +351,67 @@ export async function setCandidateCategories(
 
   revalidatePath(`/nomzodlar/${candidateId}`);
   return { status: "success", message: "Kategoriyalar yangilandi." };
+}
+
+/* ------------------------------------------------------------------ */
+/* Profil foni: Oddiy yoki VIP (Ko'k / Oltin / Pushti)                */
+/* ------------------------------------------------------------------ */
+
+export async function setProfileTheme(
+  _previous: CmsResult,
+  formData: FormData,
+): Promise<CmsResult> {
+  await guard();
+  const id = text(formData, "id");
+  const theme = text(formData, "theme");
+  if (!isProfileTheme(theme)) return { status: "error", message: "Notoʻgʻri fon." };
+
+  const info = PROFILE_THEME_INFO[theme];
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("candidates")
+    .update({
+      theme_color: theme,
+      // Sayt boshqa domenda — rasm to'liq manzil bilan saqlanadi.
+      profile_bg_url: info.image ? `${await adminBaseUrl()}${info.image}` : null,
+    })
+    .eq("id", id);
+
+  if (error) return { status: "error", message: "Saqlab boʻlmadi. SQL faylni qayta ishga tushiring." };
+
+  revalidatePath(`/nomzodlar/${id}`);
+  revalidatePath("/nomzodlar");
+  return {
+    status: "success",
+    message: info.vip ? `VIP fon tanlandi: ${info.label}.` : "Oddiy fon tanlandi.",
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Kanalga post (eski shablon) — bittadan, ro'yxatdan ommaviy         */
+/* ------------------------------------------------------------------ */
+
+export async function sendCandidatePostAction(
+  id: string,
+  onlyNotPosted = false,
+): Promise<{ ok: true; url: string } | { ok: false; message: string }> {
+  await guard();
+  const result = await sendCandidatePost(id, onlyNotPosted);
+  revalidatePath("/nomzodlar");
+  return result;
+}
+
+/** «Barchasi»: nashr etilgan barcha nomzodlar (ro'yxatda ko'rinmaganlari ham). */
+export async function listPublishedCandidateIds(onlyNotPosted: boolean): Promise<string[]> {
+  await guard();
+  const supabase = await createClient();
+  let query = supabase
+    .from("candidates")
+    .select("id")
+    .eq("status", "published")
+    .order("published_at", { ascending: true })
+    .limit(2000);
+  if (onlyNotPosted) query = query.is("post_url", null);
+  const { data } = await query;
+  return (data ?? []).map((row) => row.id);
 }

@@ -53,6 +53,10 @@ export async function createPhotoUpload(
 
   const ext = MIME_EXT[mime];
   if (!ext) return { ok: false, message: "Faqat PNG yoki JPG rasm yuklang." };
+  // Portret — faqat promptdan chiqqan shaffof PNG/WebP (oq fonli nusxa JPG bo'ladi).
+  if (variant === "portrait" && mime === "image/jpeg") {
+    return { ok: false, message: "Faqat promptdan chiqqan shaffof fonli PNG rasm qabul qilinadi." };
+  }
   if (size > 15 * 1024 * 1024) return { ok: false, message: "Rasm hajmi 15 MB dan oshmasin." };
 
   const path = `anketa/${anketa.id}/${Date.now().toString(36)}-${variant === "white" ? "oq" : "portret"}.${ext}`;

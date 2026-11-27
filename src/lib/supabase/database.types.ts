@@ -813,6 +813,10 @@ export type Database = {
           status: Database["public"]["Enums"]["candidate_status"]
           tagline: string | null
           theme_color: string
+          profile_bg_url: string | null
+          post_url: string | null
+          post_image_url: string | null
+          posted_at: string | null
           title: string | null
           updated_at: string
           video_url: string | null
@@ -853,6 +857,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["candidate_status"]
           tagline?: string | null
           theme_color?: string
+          profile_bg_url?: string | null
+          post_url?: string | null
+          post_image_url?: string | null
+          posted_at?: string | null
           title?: string | null
           updated_at?: string
           video_url?: string | null
@@ -893,6 +901,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["candidate_status"]
           tagline?: string | null
           theme_color?: string
+          profile_bg_url?: string | null
+          post_url?: string | null
+          post_image_url?: string | null
+          posted_at?: string | null
           title?: string | null
           updated_at?: string
           video_url?: string | null
@@ -1176,7 +1188,7 @@ export type Database = {
       get_admin_stats: { Args: never; Returns: Json }
       get_certificate: { Args: { p_code: string }; Returns: Json }
       get_public_stats: { Args: never; Returns: Json }
-      increment_candidate_view: { Args: { p_slug: string }; Returns: undefined }
+      increment_candidate_view: { Args: { p_slug: string }; Returns: number | null }
       is_admin: { Args: never; Returns: boolean }
       kw_to_text: { Args: { arr: string[] }; Returns: string }
       normalize_promo: { Args: { raw: string }; Returns: string }

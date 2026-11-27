@@ -71,11 +71,22 @@ export async function repostToChannel(_prev: BotResult, fd: FormData): Promise<B
   }
   const post = await postToChannel(anketa, anketa.profile_url, { update: true });
   if (!post.ok) return { status: "error", message: post.message };
-  await createAdminClient()
-    .from("anketalar")
-    .update({ post_url: post.url, post_image_url: post.imageUrl })
-    .eq("id", anketa.id);
+  const db = createAdminClient();
+  const fields = { post_url: post.url, post_image_url: post.imageUrl };
+  const [{ error: anketaError }, { error: candidateError }] = await Promise.all([
+    db.from("anketalar").update(fields).eq("id", anketa.id),
+    anketa.candidate_id
+      ? db.from("candidates").update({
+          ...fields,
+          ...(post.url !== anketa.post_url ? { posted_at: new Date().toISOString() } : {}),
+        }).eq("id", anketa.candidate_id)
+      : Promise.resolve({ error: null }),
+  ]);
   refresh(anketa.id);
+  revalidatePath("/nomzodlar");
+  if (anketaError || candidateError) {
+    return { status: "error", message: `Post yuborildi, lekin havola yozilmadi: ${post.url}` };
+  }
   return {
     status: "success",
     message: post.url === anketa.post_url ? "Post yangi shablonda yangilandi." : "Telegram post yuborildi.",
