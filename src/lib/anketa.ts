@@ -42,7 +42,7 @@ Natural skin pores, individual hair strands, realistic hands and fabric folds. N
 
 BACKGROUND
 
-Plain, perfectly flat, solid pure white background. No gradient, no floor, no shadow behind the subject, no props, no text. Clean sharp edges around hair and clothing.`;
+TRUE TRANSPARENT BACKGROUND with a real alpha channel. Completely isolate the person; all background pixels must have zero opacity. Output only a high-resolution PNG with actual alpha transparency. Do NOT use a white, gray, black, colored or gradient background. Do NOT draw a checkerboard pattern to imitate transparency. No floor, no shadow behind the subject, no props, no text. Preserve clean natural edges around hair and clothing, without halos or outlines.`;
 
 /* ------------------------------------------------------------------ */
 /* Javoblar tuzilmasi                                                 */
