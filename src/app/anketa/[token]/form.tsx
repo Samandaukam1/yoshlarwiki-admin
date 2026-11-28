@@ -578,7 +578,7 @@ function PhotoStep({
     if (!file) return;
     setError("");
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      setError("Faqat promptdan chiqqan PNG rasmni yuklang.");
+      setError("PNG, JPG yoki WebP formatidagi rasmni yuklang.");
       return;
     }
     if (file.size > 15 * 1024 * 1024) {
@@ -588,14 +588,16 @@ function PhotoStep({
 
     setUploading(true);
     try {
-      // Rasm promptimiz orqali yasalganmi (shaffof PNG, vertikal, beldan yuqori) — bo'lmasa qabul qilinmaydi.
       setStatus("Rasm tekshirilmoqda…");
-      const check = await checkPromptPortrait(file);
+      const check = await checkPromptPortrait(file, true);
       if (!check.ok) {
         setError(check.message);
         return;
       }
-      const processed = await processPortrait(file, { removeBackground: false, onStatus: setStatus });
+      const processed = await processPortrait(file, { removeBackground: true, onStatus: setStatus });
+      if (!processed.removed) {
+        throw new Error("Rasm fonini olib tashlab boʻlmadi. Internetni tekshirib, qayta urinib koʻring yoki shaffof fonli PNG yuklang.");
+      }
       setStatus("Yuklanmoqda…");
       const [portraitPath, whitePath] = await Promise.all([
         send(processed.cutout, "portrait"),
@@ -654,7 +656,7 @@ function PhotoStep({
               <ImagePlus className="size-7" strokeWidth={1.7} />
             </span>
             <span className="text-[15px] font-semibold text-ink">Rasm yuklash</span>
-            <span className="text-[12.5px] text-ink-3">Faqat promptdan chiqqan shaffof fonli PNG</span>
+            <span className="text-[12.5px] text-ink-3">PNG, JPG yoki WebP — fon avtomatik olib tashlanadi</span>
           </span>
         )}
 
@@ -675,13 +677,13 @@ function PhotoStep({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/webp"
+        accept="image/png,image/jpeg,image/webp"
         className="hidden"
         onChange={(e) => void upload(e.target.files?.[0])}
       />
 
       <p className="-mt-2 text-center text-[12.5px] leading-relaxed text-ink-3">
-        Oddiy rasm, skrinshot yoki fonli rasm qabul qilinmaydi — avval pastdagi prompt bilan rasm yasating.
+        Avval pastdagi prompt bilan portret yasating. Rasm foni boʻlsa, yuklashda avtomatik olib tashlanadi.
       </p>
 
       {photo ? (

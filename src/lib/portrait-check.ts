@@ -67,15 +67,15 @@ function looksLikeFakeChecker(data: Uint8ClampedArray, w: number, h: number): bo
   return light > w * 0.25 && grey > w * 0.2 && switches >= 6;
 }
 
-export async function checkPromptPortrait(file: File): Promise<PortraitCheck> {
-  if (file.type === "image/jpeg") {
+export async function checkPromptPortrait(file: File, allowBackground = false): Promise<PortraitCheck> {
+  if (file.type === "image/jpeg" && !allowBackground) {
     return {
       ok: false,
       message: `JPG rasm qabul qilinmaydi — promptdagi rasm shaffof fonli PNG boʻladi. ${NOT_PROMPT}`,
     };
   }
-  if (file.type !== "image/png" && file.type !== "image/webp") {
-    return { ok: false, message: "Faqat promptdan chiqqan PNG rasmni yuklang." };
+  if (file.type !== "image/png" && file.type !== "image/webp" && !(allowBackground && file.type === "image/jpeg")) {
+    return { ok: false, message: allowBackground ? "PNG, JPG yoki WebP formatidagi rasmni yuklang." : "Faqat promptdan chiqqan PNG rasmni yuklang." };
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -122,6 +122,7 @@ export async function checkPromptPortrait(file: File): Promise<PortraitCheck> {
       if (alphaAt(w - 1, y) < 20) clear += 1;
     }
     if (clear / edge < 0.7) {
+      if (allowBackground) return { ok: true };
       if (looksLikeFakeChecker(data, w, h)) {
         return {
           ok: false,
